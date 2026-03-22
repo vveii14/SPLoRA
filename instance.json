@@ -1,0 +1,30 @@
+{
+  "instance_id": "nips2_v0_2026-03-18T00-55-11-675Z",
+  "idea_maturity": "",
+  "created_at": "2026-03-18T00:55:11.675Z",
+  "instance": "/home/wel425/dr-claw/nips2_v0/instance.json",
+  "category": "",
+  "Survey": {
+    "references": "/home/wel425/dr-claw/nips2_v0/Survey/references",
+    "reports": "/home/wel425/dr-claw/nips2_v0/Survey/reports"
+  },
+  "Ideation": {
+    "ideas": "/home/wel425/dr-claw/nips2_v0/Ideation/ideas",
+    "references": "/home/wel425/dr-claw/nips2_v0/Ideation/references"
+  },
+  "Experiment": {
+    "code_references": "/home/wel425/dr-claw/nips2_v0/Experiment/code_references",
+    "datasets": "/home/wel425/dr-claw/nips2_v0/Experiment/datasets",
+    "core_code": "/home/wel425/dr-claw/nips2_v0/Experiment/core_code",
+    "analysis": "/home/wel425/dr-claw/nips2_v0/Experiment/analysis"
+  },
+  "Publication": {
+    "paper": "/home/wel425/dr-claw/nips2_v0/Publication/paper"
+  },
+  "Promotion": {
+    "homepage": "/home/wel425/dr-claw/nips2_v0/Promotion/homepage",
+    "slides": "/home/wel425/dr-claw/nips2_v0/Promotion/slides",
+    "audio": "/home/wel425/dr-claw/nips2_v0/Promotion/audio",
+    "video": "/home/wel425/dr-claw/nips2_v0/Promotion/video"
+  }
+}

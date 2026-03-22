@@ -1,0 +1,583 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Refine sections.survey.literature_scope",
+        "description": "Refine the survey scope so the literature boundary clearly covers LoRA-style PEFT, tensorized adapters, sparse PEFT, and adapter interpretability.",
+        "status": "done",
+        "stage": "survey",
+        "priority": "high",
+        "dependencies": [],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.survey.literature_scope",
+          "sections.survey.key_references"
+        ],
+        "suggestedSkills": [
+          "academic-researcher"
+        ],
+        "sourceBlueprintId": "required_element.sections.survey.literature_scope",
+        "nextActionPrompt": "Task: Refine sections.survey.literature_scope\nStage: survey\nUser inputs: Topic is sparse tensorized adapters for interpretable and efficient LLM fine-tuning; current references include LoRA, boosted sparse and low-rank tensor regression, LoRETTA, LoTR, LoRTA, and SoRA.\nSuggested skills: academic-researcher\nQuality gate: Novelty boundary against tensorized PEFT and sparse PEFT is explicit and citation-backed; The survey identifies at least one concrete open gap connecting efficiency and adapter-level interpretability.\nStage guidance: Tighten the search boundary and make the literature review executable.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 2,
+        "title": "Refine sections.survey.synthesis_summary",
+        "description": "Turn the current survey summary into a citation-backed synthesis that separates known results from open questions.",
+        "status": "done",
+        "stage": "survey",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.survey.synthesis_summary",
+          "sections.survey.open_gaps"
+        ],
+        "suggestedSkills": [
+          "academic-researcher"
+        ],
+        "sourceBlueprintId": "required_element.sections.survey.synthesis_summary",
+        "nextActionPrompt": "Task: Refine sections.survey.synthesis_summary\nStage: survey\nUser inputs: The current summary states that tensorized and sparse PEFT are already studied, but sparse tensor pathways for interpretable adapters may still be open.\nSuggested skills: academic-researcher\nQuality gate: Novelty boundary against tensorized PEFT and sparse PEFT is explicit and citation-backed; The survey identifies at least one concrete open gap connecting efficiency and adapter-level interpretability.\nStage guidance: Produce a rigorous literature synthesis with explicit novelty risk assessment.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 3,
+        "title": "Map the sparse, tensorized, and interpretable PEFT literature",
+        "description": "Collect core papers on LoRA-style PEFT, tensorized adapters, sparse adapters, and interpretability-oriented adaptation, then cluster them by mechanism and claim.",
+        "status": "done",
+        "stage": "survey",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "taskType": "exploration",
+        "inputsNeeded": [
+          "sections.survey.literature_scope"
+        ],
+        "suggestedSkills": [
+          "academic-researcher"
+        ],
+        "sourceBlueprintId": "survey_collect_references",
+        "nextActionPrompt": "Task: Map the sparse, tensorized, and interpretable PEFT literature\nStage: survey\nUser inputs: Focus on LoRA-style PEFT, tensorized adapter parameterizations, sparse adapter methods, and interpretability-oriented adaptation for LLMs.\nSuggested skills: academic-researcher\nQuality gate: Novelty boundary against tensorized PEFT and sparse PEFT is explicit and citation-backed.\nStage guidance: Build a cluster map of the field before selecting a final method direction.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 4,
+        "title": "Write a novelty memo for sparse tensor pathways in LLM adapters",
+        "description": "Synthesize the literature into a citation-backed memo that states what is already known, what is adjacent, and what remains open for sparse tensorized interpretable PEFT.",
+        "status": "done",
+        "stage": "survey",
+        "priority": "high",
+        "dependencies": [
+          2,
+          3
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.survey.synthesis_summary",
+          "sections.survey.open_gaps"
+        ],
+        "suggestedSkills": [
+          "academic-researcher"
+        ],
+        "sourceBlueprintId": "survey_summarize_gaps",
+        "nextActionPrompt": "Task: Write a novelty memo for sparse tensor pathways in LLM adapters\nStage: survey\nUser inputs: The project aims to test whether sparse tensor components can act as interpretable task pathways while preserving PEFT efficiency.\nSuggested skills: academic-researcher\nQuality gate: Novelty boundary against tensorized PEFT and sparse PEFT is explicit and citation-backed; The survey identifies at least one concrete open gap connecting efficiency and adapter-level interpretability.\nStage guidance: End with a yes or no judgment on whether the project has room for a paper-worthy contribution.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 5,
+        "title": "Survey quality gate review",
+        "description": "Review whether the literature survey clearly establishes novelty boundaries and concrete open gaps for sparse tensorized interpretable PEFT.",
+        "status": "done",
+        "stage": "survey",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.survey.literature_scope",
+          "sections.survey.synthesis_summary",
+          "sections.survey.open_gaps"
+        ],
+        "suggestedSkills": [
+          "academic-researcher"
+        ],
+        "sourceBlueprintId": "quality_gate.survey",
+        "nextActionPrompt": "Task: Survey quality gate review\nStage: survey\nUser inputs: Survey work on sparse, tensorized, and interpretable PEFT should now be available.\nSuggested skills: academic-researcher\nQuality gate: Novelty boundary against tensorized PEFT and sparse PEFT is explicit and citation-backed; The survey identifies at least one concrete open gap connecting efficiency and adapter-level interpretability.\nStage guidance: Approve the transition to ideation only if the novelty memo is explicit and defensible.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 6,
+        "title": "Refine sections.ideation.research_goal",
+        "description": "Sharpen the research goal into a precise statement of what the proposed sparse tensor adapter is supposed to achieve.",
+        "status": "done",
+        "stage": "ideation",
+        "priority": "high",
+        "dependencies": [
+          5
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.ideation.research_goal",
+          "sections.ideation.success_criteria"
+        ],
+        "suggestedSkills": [
+          "inno-idea-generation"
+        ],
+        "sourceBlueprintId": "required_element.sections.ideation.research_goal",
+        "nextActionPrompt": "Task: Refine sections.ideation.research_goal\nStage: ideation\nUser inputs: Goal is to build a tensorized sparse adapter that preserves LoRA-like efficiency and improves interpretability through sparse pathways.\nSuggested skills: inno-idea-generation\nQuality gate: The selected direction is distinct from direct tensorization-only or sparsity-only baselines; The idea states a falsifiable claim about efficiency and interpretability rather than only a broad intuition.\nStage guidance: Convert the broad ambition into a concrete research objective.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 7,
+        "title": "Refine sections.ideation.problem_framing",
+        "description": "Write a stronger problem framing that explains why direct transplantation of tensor regression is insufficient and what new angle the project contributes.",
+        "status": "done",
+        "stage": "ideation",
+        "priority": "high",
+        "dependencies": [
+          5
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.ideation.problem_framing",
+          "sections.survey.open_gaps"
+        ],
+        "suggestedSkills": [
+          "inno-idea-generation"
+        ],
+        "sourceBlueprintId": "required_element.sections.ideation.problem_framing",
+        "nextActionPrompt": "Task: Refine sections.ideation.problem_framing\nStage: ideation\nUser inputs: Directly implementing boosted sparse and low-rank tensor regression in LLMs may be weak novelty; interpretability-first sparse tensor pathways may be stronger.\nSuggested skills: inno-idea-generation\nQuality gate: The selected direction is distinct from direct tensorization-only or sparsity-only baselines; The idea states a falsifiable claim about efficiency and interpretability rather than only a broad intuition.\nStage guidance: Make the framing both novel and testable.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 8,
+        "title": "Generate candidate sparse tensor adapter formulations",
+        "description": "Brainstorm concrete method variants such as CP-style sparse pathways, Tucker-style grouped adapters, or structured sparsity over tensorized LoRA updates, and record trade-offs.",
+        "status": "done",
+        "stage": "ideation",
+        "priority": "high",
+        "dependencies": [
+          6,
+          7
+        ],
+        "taskType": "exploration",
+        "inputsNeeded": [
+          "sections.ideation.research_goal",
+          "sections.ideation.problem_framing"
+        ],
+        "suggestedSkills": [
+          "inno-idea-generation"
+        ],
+        "sourceBlueprintId": "ideation_explore_directions",
+        "nextActionPrompt": "Task: Generate candidate sparse tensor adapter formulations\nStage: ideation\nUser inputs: Need method variants that combine tensorization, structured sparsity, and adapter-level interpretability for LLM fine-tuning.\nSuggested skills: inno-idea-generation\nQuality gate: The selected direction is distinct from direct tensorization-only or sparsity-only baselines.\nStage guidance: Diverge across at least a few design families before converging on one.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 9,
+        "title": "Select the first research direction with novelty and feasibility rationale",
+        "description": "Compare candidate directions on novelty risk, implementation complexity, expected interpretability signal, and compatibility with the available compute budget.",
+        "status": "in-progress",
+        "stage": "ideation",
+        "priority": "high",
+        "dependencies": [
+          8
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.ideation.evidence_plan",
+          "sections.ideation.success_criteria"
+        ],
+        "suggestedSkills": [
+          "inno-idea-generation"
+        ],
+        "sourceBlueprintId": "ideation_select_direction",
+        "nextActionPrompt": "Task: Select the first research direction with novelty and feasibility rationale\nStage: ideation\nUser inputs: 4x A100 are available; data and model scale can be chosen according to feasibility.\nSuggested skills: inno-idea-generation\nQuality gate: The selected direction is distinct from direct tensorization-only or sparsity-only baselines; The idea states a falsifiable claim about efficiency and interpretability rather than only a broad intuition.\nStage guidance: Choose one first implementation path and explicitly reject the others for now.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-22T18:55:00Z"
+      },
+      {
+        "id": 10,
+        "title": "Ideation quality gate review",
+        "description": "Review whether the chosen direction is novel enough, testable, and feasible under the available compute budget.",
+        "status": "pending",
+        "stage": "ideation",
+        "priority": "high",
+        "dependencies": [
+          9
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.ideation.research_goal",
+          "sections.ideation.problem_framing",
+          "sections.ideation.success_criteria"
+        ],
+        "suggestedSkills": [
+          "inno-idea-generation"
+        ],
+        "sourceBlueprintId": "quality_gate.ideation",
+        "nextActionPrompt": "Task: Ideation quality gate review\nStage: ideation\nUser inputs: Candidate directions have been compared and one should be selected.\nSuggested skills: inno-idea-generation\nQuality gate: The selected direction is distinct from direct tensorization-only or sparsity-only baselines; The idea states a falsifiable claim about efficiency and interpretability rather than only a broad intuition.\nStage guidance: Approve the move to experiment only if the direction can be falsified with a realistic benchmark plan.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 11,
+        "title": "Refine sections.experiment.hypothesis_or_validation_goal",
+        "description": "Make the main experimental hypothesis precise enough to drive protocol design and evaluation.",
+        "status": "pending",
+        "stage": "experiment",
+        "priority": "medium",
+        "dependencies": [
+          10
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.experiment.hypothesis_or_validation_goal"
+        ],
+        "suggestedSkills": [
+          "inno-experiment-dev"
+        ],
+        "sourceBlueprintId": "required_element.sections.experiment.hypothesis_or_validation_goal",
+        "nextActionPrompt": "Task: Refine sections.experiment.hypothesis_or_validation_goal\nStage: experiment\nUser inputs: Structured sparse tensor adapters should approach LoRA-family performance while yielding more distinct and analyzable components.\nSuggested skills: inno-experiment-dev\nQuality gate: The protocol includes LoRA plus at least one sparse or tensorized PEFT baseline.\nStage guidance: Write the hypothesis so it can be cleanly tested and potentially falsified.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 12,
+        "title": "Refine sections.experiment.method_or_protocol",
+        "description": "Turn the broad method sketch into a concrete training and benchmarking protocol.",
+        "status": "pending",
+        "stage": "experiment",
+        "priority": "medium",
+        "dependencies": [
+          10
+        ],
+        "taskType": "implementation",
+        "inputsNeeded": [
+          "sections.experiment.method_or_protocol",
+          "sections.experiment.dataset_or_data_source"
+        ],
+        "suggestedSkills": [
+          "inno-code-survey",
+          "inno-experiment-dev"
+        ],
+        "sourceBlueprintId": "required_element.sections.experiment.method_or_protocol",
+        "nextActionPrompt": "Task: Refine sections.experiment.method_or_protocol\nStage: experiment\nUser inputs: Start with a CP-style or related tensor decomposition with explicit structured sparsity regularization and benchmark against LoRA plus sparse or tensorized baselines.\nSuggested skills: inno-code-survey, inno-experiment-dev\nQuality gate: The protocol includes LoRA plus at least one sparse or tensorized PEFT baseline; Interpretability metrics are defined before experiments begin and are not retrofitted after results.\nStage guidance: Specify the first implementation plan and benchmark ladder.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 13,
+        "title": "Refine sections.experiment.evaluation_plan",
+        "description": "Define accuracy, efficiency, and interpretability metrics before the first implementation pass.",
+        "status": "pending",
+        "stage": "experiment",
+        "priority": "medium",
+        "dependencies": [
+          10
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.experiment.evaluation_plan"
+        ],
+        "suggestedSkills": [
+          "inno-experiment-dev"
+        ],
+        "sourceBlueprintId": "required_element.sections.experiment.evaluation_plan",
+        "nextActionPrompt": "Task: Refine sections.experiment.evaluation_plan\nStage: experiment\nUser inputs: Need task metrics, parameter count, runtime, memory, and interpretability diagnostics such as component sparsity and ablation curves.\nSuggested skills: inno-experiment-dev\nQuality gate: Interpretability metrics are defined before experiments begin and are not retrofitted after results.\nStage guidance: Lock the evaluation protocol early so later claims remain defensible.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 14,
+        "title": "Define the sparse tensor adapter implementation and benchmark ladder",
+        "description": "Specify the adapter parameterization, regularization, training recipe, model sizes, and benchmark progression from small validation settings to larger LLM runs.",
+        "status": "pending",
+        "stage": "experiment",
+        "priority": "medium",
+        "dependencies": [
+          11,
+          12,
+          13
+        ],
+        "taskType": "implementation",
+        "inputsNeeded": [
+          "sections.experiment.hypothesis_or_validation_goal",
+          "sections.experiment.method_or_protocol",
+          "sections.experiment.evaluation_plan"
+        ],
+        "suggestedSkills": [
+          "inno-code-survey",
+          "inno-experiment-dev"
+        ],
+        "sourceBlueprintId": "experiment_define_protocol",
+        "nextActionPrompt": "Task: Define the sparse tensor adapter implementation and benchmark ladder\nStage: experiment\nUser inputs: 4x A100 compute is available; the project should scale data and model size according to method stability.\nSuggested skills: inno-code-survey, inno-experiment-dev\nQuality gate: The protocol includes LoRA plus at least one sparse or tensorized PEFT baseline; Interpretability metrics are defined before experiments begin and are not retrofitted after results.\nStage guidance: Produce an implementation-ready plan, not just a high-level idea.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 15,
+        "title": "Run baseline PEFT experiments and interpretability probes",
+        "description": "Execute LoRA and selected sparse or tensorized baselines, then compare quality, efficiency, and component-level diagnostics against the proposed method.",
+        "status": "pending",
+        "stage": "experiment",
+        "priority": "medium",
+        "dependencies": [
+          14
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.experiment.method_or_protocol",
+          "sections.experiment.evaluation_plan"
+        ],
+        "suggestedSkills": [
+          "inno-experiment-dev"
+        ],
+        "sourceBlueprintId": "experiment_run_analysis",
+        "nextActionPrompt": "Task: Run baseline PEFT experiments and interpretability probes\nStage: experiment\nUser inputs: Compare the proposed sparse tensor adapter against LoRA and selected sparse or tensorized PEFT baselines.\nSuggested skills: inno-experiment-dev\nQuality gate: The protocol includes LoRA plus at least one sparse or tensorized PEFT baseline; Interpretability metrics are defined before experiments begin and are not retrofitted after results.\nStage guidance: Start with baselines if the proposed method is not yet stable enough for full runs.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 16,
+        "title": "Experiment quality gate review",
+        "description": "Review whether the protocol and baseline results are sufficient to support a publication-grade experimental campaign.",
+        "status": "pending",
+        "stage": "experiment",
+        "priority": "medium",
+        "dependencies": [
+          15
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.experiment.hypothesis_or_validation_goal",
+          "sections.experiment.method_or_protocol",
+          "sections.experiment.evaluation_plan"
+        ],
+        "suggestedSkills": [
+          "inno-experiment-dev"
+        ],
+        "sourceBlueprintId": "quality_gate.experiment",
+        "nextActionPrompt": "Task: Experiment quality gate review\nStage: experiment\nUser inputs: Initial protocol and baseline evidence should now exist.\nSuggested skills: inno-experiment-dev\nQuality gate: The protocol includes LoRA plus at least one sparse or tensorized PEFT baseline; Interpretability metrics are defined before experiments begin and are not retrofitted after results.\nStage guidance: Confirm readiness for a full submission-oriented experiment campaign.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 17,
+        "title": "Refine sections.publication.paper_outline",
+        "description": "Refine the paper outline so the contribution story is clean and aligned with likely experimental evidence.",
+        "status": "pending",
+        "stage": "publication",
+        "priority": "low",
+        "dependencies": [
+          16
+        ],
+        "taskType": "writing",
+        "inputsNeeded": [
+          "sections.publication.paper_outline"
+        ],
+        "suggestedSkills": [
+          "inno-paper-writing"
+        ],
+        "sourceBlueprintId": "required_element.sections.publication.paper_outline",
+        "nextActionPrompt": "Task: Refine sections.publication.paper_outline\nStage: publication\nUser inputs: The paper should cover efficient and interpretable PEFT, sparse tensor pathways, experiments, and limitations.\nSuggested skills: inno-paper-writing\nQuality gate: The paper narrative cleanly separates novelty in method design from novelty in interpretability evaluation.\nStage guidance: Keep the outline grounded in what the experiments can realistically support.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 18,
+        "title": "Define sections.publication.submission_checklist",
+        "description": "Create the initial submission checklist for writing, experiments, references, artifacts, and internal deadlines.",
+        "status": "pending",
+        "stage": "publication",
+        "priority": "low",
+        "dependencies": [
+          16
+        ],
+        "taskType": "writing",
+        "inputsNeeded": [
+          "sections.publication.submission_checklist"
+        ],
+        "suggestedSkills": [
+          "inno-paper-writing"
+        ],
+        "sourceBlueprintId": "required_element.sections.publication.submission_checklist",
+        "nextActionPrompt": "Task: Define sections.publication.submission_checklist\nStage: publication\nUser inputs: Target venue is NeurIPS with a May deadline.\nSuggested skills: inno-paper-writing\nQuality gate: Claims about interpretability are matched to explicit analyses and caveats.\nStage guidance: Make the checklist concrete enough to drive execution later.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 19,
+        "title": "Expand the sparse tensor adapter outline into a paper draft",
+        "description": "Turn the outline into a draft with explicit claim-evidence alignment for novelty, method, experiments, and limitations.",
+        "status": "pending",
+        "stage": "publication",
+        "priority": "low",
+        "dependencies": [
+          17,
+          18
+        ],
+        "taskType": "writing",
+        "inputsNeeded": [
+          "sections.publication.paper_outline",
+          "sections.publication.figures_tables_plan"
+        ],
+        "suggestedSkills": [
+          "inno-paper-writing"
+        ],
+        "sourceBlueprintId": "publication_outline_to_draft",
+        "nextActionPrompt": "Task: Expand the sparse tensor adapter outline into a paper draft\nStage: publication\nUser inputs: The draft should emphasize both efficiency and interpretability without overstating novelty.\nSuggested skills: inno-paper-writing\nQuality gate: The paper narrative cleanly separates novelty in method design from novelty in interpretability evaluation; Claims about interpretability are matched to explicit analyses and caveats.\nStage guidance: Draft only after the experiment story is stable enough.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 20,
+        "title": "Finalize figures, tables, and reproducibility artifacts",
+        "description": "Prepare the main comparison tables, pathway visualizations, and code or appendix artifacts needed for submission.",
+        "status": "pending",
+        "stage": "publication",
+        "priority": "low",
+        "dependencies": [
+          19
+        ],
+        "taskType": "writing",
+        "inputsNeeded": [
+          "sections.publication.figures_tables_plan",
+          "sections.publication.artifact_plan"
+        ],
+        "suggestedSkills": [
+          "inno-paper-writing"
+        ],
+        "sourceBlueprintId": "publication_finalize_artifacts",
+        "nextActionPrompt": "Task: Finalize figures, tables, and reproducibility artifacts\nStage: publication\nUser inputs: Need comparison tables, architecture diagrams, and pathway visualizations for sparse tensor adapters.\nSuggested skills: inno-paper-writing\nQuality gate: Claims about interpretability are matched to explicit analyses and caveats.\nStage guidance: Treat artifacts as part of the paper's evidence, not post-hoc decoration.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 21,
+        "title": "Publication quality gate review",
+        "description": "Review whether the draft, claims, and artifacts are coherent enough for submission preparation.",
+        "status": "pending",
+        "stage": "publication",
+        "priority": "low",
+        "dependencies": [
+          20
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.publication.paper_outline",
+          "sections.publication.submission_checklist"
+        ],
+        "suggestedSkills": [
+          "inno-paper-writing"
+        ],
+        "sourceBlueprintId": "quality_gate.publication",
+        "nextActionPrompt": "Task: Publication quality gate review\nStage: publication\nUser inputs: Draft and artifacts should now exist.\nSuggested skills: inno-paper-writing\nQuality gate: The paper narrative cleanly separates novelty in method design from novelty in interpretability evaluation; Claims about interpretability are matched to explicit analyses and caveats.\nStage guidance: Only proceed if the paper can defend both its efficiency and interpretability claims.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 22,
+        "title": "Refine sections.promotion.slide_outline",
+        "description": "Refine the talk outline so it clearly explains the motivation, method, and empirical evidence.",
+        "status": "pending",
+        "stage": "promotion",
+        "priority": "low",
+        "dependencies": [
+          21
+        ],
+        "taskType": "scripting",
+        "inputsNeeded": [
+          "sections.promotion.slide_outline"
+        ],
+        "suggestedSkills": [
+          "making-academic-presentations"
+        ],
+        "sourceBlueprintId": "required_element.sections.promotion.slide_outline",
+        "nextActionPrompt": "Task: Refine sections.promotion.slide_outline\nStage: promotion\nUser inputs: Slides should cover motivation, method intuition, results, and limitations for sparse tensor pathways.\nSuggested skills: making-academic-presentations\nQuality gate: The promotion materials explain both efficiency and interpretability contributions without overselling novelty.\nStage guidance: Keep the talk structure technical and evidence-first.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 23,
+        "title": "Draft a project talk for sparse tensor pathways",
+        "description": "Prepare a concise slide flow covering motivation, gap analysis, method intuition, results, and limitations.",
+        "status": "pending",
+        "stage": "promotion",
+        "priority": "low",
+        "dependencies": [
+          22
+        ],
+        "taskType": "scripting",
+        "inputsNeeded": [
+          "sections.promotion.slide_outline",
+          "sections.promotion.deck_style"
+        ],
+        "suggestedSkills": [
+          "making-academic-presentations"
+        ],
+        "sourceBlueprintId": "promotion_draft_outline",
+        "nextActionPrompt": "Task: Draft a project talk for sparse tensor pathways\nStage: promotion\nUser inputs: The deck should explain both efficient PEFT and pathway-level interpretability.\nSuggested skills: making-academic-presentations\nQuality gate: The promotion materials explain both efficiency and interpretability contributions without overselling novelty.\nStage guidance: Reserve promotion work until the paper story is settled.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 24,
+        "title": "Prepare homepage content and figure selections",
+        "description": "Organize the project page narrative, key tables, diagrams, and links for the final release.",
+        "status": "pending",
+        "stage": "promotion",
+        "priority": "low",
+        "dependencies": [
+          23
+        ],
+        "taskType": "delivery",
+        "inputsNeeded": [
+          "sections.promotion.homepage_plan"
+        ],
+        "suggestedSkills": [
+          "making-academic-presentations"
+        ],
+        "sourceBlueprintId": "promotion_prepare_homepage",
+        "nextActionPrompt": "Task: Prepare homepage content and figure selections\nStage: promotion\nUser inputs: Homepage should present the adapter idea, main results, and code release artifacts.\nSuggested skills: making-academic-presentations\nQuality gate: Visual assets clearly show the adapter pathway structure and main empirical results.\nStage guidance: The homepage should reuse the strongest paper figures rather than inventing a separate narrative.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      },
+      {
+        "id": 25,
+        "title": "Promotion quality gate review",
+        "description": "Review whether the talk and homepage materials present the work accurately and clearly.",
+        "status": "pending",
+        "stage": "promotion",
+        "priority": "low",
+        "dependencies": [
+          24
+        ],
+        "taskType": "analysis",
+        "inputsNeeded": [
+          "sections.promotion.slide_outline",
+          "sections.promotion.homepage_plan"
+        ],
+        "suggestedSkills": [
+          "making-academic-presentations"
+        ],
+        "sourceBlueprintId": "quality_gate.promotion",
+        "nextActionPrompt": "Task: Promotion quality gate review\nStage: promotion\nUser inputs: Slide outline and homepage content should now exist.\nSuggested skills: making-academic-presentations\nQuality gate: The promotion materials explain both efficiency and interpretability contributions without overselling novelty; Visual assets clearly show the adapter pathway structure and main empirical results.\nStage guidance: Check that the final outward-facing story remains consistent with the paper.",
+        "createdAt": "2026-03-18T01:06:34Z",
+        "updatedAt": "2026-03-18T01:06:34Z"
+      }
+    ]
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "schemaVersion": "1.1",
+  "templateId": "agent-generated",
+  "meta": {
+    "title": "Sparse Tensorized Adapters for Interpretable and Efficient LLM Fine-Tuning",
+    "lead_author": "",
+    "target_venue": "NeurIPS",
+    "date": "2026-03-18"
+  },
+  "sections": {
+    "survey": {
+      "literature_scope": "Survey only the literature needed to answer the project's novelty question: whether a sparse tensorized adapter for LLM fine-tuning can still make a distinct contribution once prior work on LoRA-style PEFT, tensorized adapters, sparse PEFT, and interpretability-adjacent adaptation is accounted for. The core baseline cluster is LoRA-family low-rank adaptation; the first adjacent cluster is tensorized PEFT including LoTR, LoRETTA, LoRTA, and related tensorized reparameterizations; the second adjacent cluster is sparse PEFT including SoRA, SpIEL, SPP, and related sparse-update methods; the interpretability bridge is anchored by Boosted Sparse and Low-Rank Tensor Regression and sparse-feature-model adaptation work such as Low-Rank Adapting Models for Sparse Autoencoders. The survey excludes generic adapter papers and pure compression work unless they directly constrain novelty for sparse tensorized interpretable PEFT. Initial clustered literature map: Survey/reports/2026-03-18_peft_literature_scope_and_map.md",
+      "key_references": [
+        "Hu et al., LoRA: Low-Rank Adaptation of Large Language Models, 2021",
+        "He et al., Boosted Sparse and Low-Rank Tensor Regression, NeurIPS 2018",
+        "Ding et al., Sparse Low-rank Adaptation of Pre-trained Language Models, EMNLP 2023",
+        "Yang et al., LoRETTA: Low-Rank Economic Tensor-Train Adaptation for Ultra-Low-Parameter Fine-Tuning of Large Language Models, NAACL 2024",
+        "Bershatsky et al., LoTR: Low Tensor Rank Weight Adaptation, 2024",
+        "Hounie et al., LoRTA: Low Rank Tensor Adaptation of Large Language Models, 2024",
+        "Ansell et al., Scaling Sparse Fine-Tuning to Large Language Models, 2024",
+        "Lu et al., SPP: Sparsity-Preserved Parameter-Efficient Fine-Tuning for Large Language Models, ICML 2024",
+        "Chen et al., Low-Rank Adapting Models for Sparse Autoencoders, ICML 2025"
+      ],
+      "synthesis_summary": "The literature now supports a narrower and more defensible project claim. Low-rank PEFT is already established by LoRA; tensorized PEFT is already represented by LoRETTA, LoTR, LoRTA, and related methods; sparse and sparse-plus-low-rank PEFT are already represented by SoRA, RoseLoRA, Scaling Sparse Fine-Tuning to LLMs, and SPP. Therefore, the project cannot rely on tensorization, sparsity, or CP decomposition alone as its novelty claim. The viable opening is to import the pathway interpretation intuition from boosted sparse and low-rank tensor regression and turn it into an interpretability-first adapter design problem: sparse tensor components should be treated as candidate task pathways and evaluated with explicit component-level diagnostics such as sparsity, concentration, ablation impact, and stability. Novelty memo: Survey/reports/2026-03-18_sparse_tensor_pathways_novelty_memo.md. Component novelty boundary tables for LoRA plus rank-1 decomposition, regularization, and tensorization: Ideation/ideas/2026-03-18_lora_component_novelty_boundary_tables.md. Citation-backed LoRA precedent survey and code-aligned literature memo: Survey/reports/2026-03-22_lora_precedent_survey_with_citations.md",
+      "open_gaps": [
+        "Existing LLM PEFT papers already cover tensorization and sparsity, so novelty likely depends on explicit sparse pathway interpretation and evaluation rather than on tensorization or sparsification alone.",
+        "Interpretability evaluation for adapters is under-specified relative to standard efficiency and accuracy reporting.",
+        "It is not yet clear which tensor factorization family, such as CP, Tucker, tensor-train, or Kronecker-style factorizations, offers the best trade-off among efficiency, training stability, and pathway-level analysis.",
+        "The closest novelty threat is CP-based tensorized PEFT such as LoRTA, so any method that stays too close to CP plus sparsity regularization may be judged incremental unless it adds a stronger interpretability mechanism or evaluation protocol."
+      ]
+    },
+    "ideation": {
+      "research_goal": "Develop a parameter-efficient LLM adapter that combines tensorized structure with explicit structured sparsity so that the learned adaptation decomposes into a small number of analyzable components, and test whether those components retain LoRA-level utility while improving adapter-level interpretability under predefined diagnostics such as component sparsity, concentration, ablation impact, and stability.",
+      "problem_framing": "The project should not be framed as a generic extension of LoRA with tensors or sparsity, because low-rank PEFT, sparse PEFT, and tensorized PEFT are already established. The defensible problem is narrower: existing PEFT methods optimize efficiency and task quality, but usually do not make the learned adapter decomposition itself a first-class scientific object. The central hypothesis is that if the update is decomposed into structured sparse tensor components, then each component may behave like a task pathway over a restricted subset of architectural dimensions, yielding a stronger efficiency-analyzability trade-off than standard LoRA-style adapters. To be credible, the method must remain clearly distinct from LoRTA-style CP tensorization alone, SoRA-style sparsified low-rank adaptation alone, and post-hoc interpretability analyses that do not shape the adapter design itself.",
+      "evidence_plan": "Compare a short list of pathway-aware adapter formulations against LoRA and sparse or tensorized PEFT baselines on representative language tasks. The current ideation shortlist is: group-structured tensor paths, CP-style sparse pathways, and an interpretability-first minimal sparse tensor adapter. Measure task performance, trainable parameter count, runtime and memory cost, sparsity structure, component stability across seeds, and component ablation effects. Use qualitative and causal analyses to test whether learned sparse tensor components align with identifiable functional roles. Candidate generation artifact: Ideation/ideas/2026-03-18_candidate_sparse_tensor_adapter_formulations.md. Literature-backed novelty boundary tables for task-9 direction selection: Ideation/ideas/2026-03-18_lora_component_novelty_boundary_tables.md",
+      "success_criteria": [
+        "A clearly differentiated method statement relative to LoRA, LoRETTA, LoTR, LoRTA, and SoRA.",
+        "Comparable or improved downstream task performance at similar or lower trainable parameter budgets.",
+        "Evidence that learned adapter components are more interpretable than standard low-rank adapters under predefined diagnostics.",
+        "A feasible implementation and evaluation plan that fits within the available 4x A100 compute budget.",
+        "A first implementation choice among the current shortlist of group-structured tensor paths, CP-style sparse pathways, and an interpretability-first minimal sparse tensor adapter."
+      ]
+    },
+    "experiment": {
+      "hypothesis_or_validation_goal": "Structured sparse tensor adapters can match or approach LoRA-family performance while producing a smaller number of semantically or functionally distinct adapter components that are easier to analyze.",
+      "dataset_or_data_source": "To be chosen by scale: likely a staged benchmark stack with small validation tasks first, then instruction tuning or standard LLM adaptation benchmarks if the method is stable.",
+      "method_or_protocol": "Start with a minimal adapter formulation based on a CP-style or related tensor decomposition with explicit structured sparsity regularization. Benchmark against LoRA and at least one sparse or tensorized PEFT baseline. Begin on smaller open models and scale to stronger base models only after validating optimization stability.",
+      "evaluation_plan": "Report task metrics, parameter count, wall-clock training cost, peak memory, and inference overhead if any. Add interpretability diagnostics including component sparsity statistics, component ablation curves, consistency across seeds, and analyses of component concentration over layers, heads, or projection groups."
+    },
+    "publication": {
+      "paper_outline": "Introduction on efficient and interpretable PEFT; related work spanning LoRA, sparse PEFT, tensorized PEFT, and interpretable adaptation; method defining sparse tensor pathways; experiments on efficiency, quality, and interpretability; analysis of novelty boundaries and failure modes; conclusion. Current citation-backed method/proposal note artifact: Publication/paper/2026-03-22_structured_update_proposal_note.md",
+      "figures_tables_plan": "Comparison table versus LoRA-family baselines; architecture diagram of sparse tensor adapter; scaling plots for parameters and runtime; interpretability plots showing component sparsity and ablation behavior. Figure-generation status and prompt draft: Publication/paper/2026-03-22_figure_generation_status.md",
+      "artifact_plan": "Release code for the adapter implementation, training scripts, evaluation protocol, and analysis notebooks sufficient to reproduce the main tables and figures.",
+      "submission_checklist": []
+    },
+    "promotion": {
+      "slide_outline": "Motivation, gap in current PEFT, sparse tensor pathway idea, experimental evidence, interpretability analyses, limitations, and takeaways.",
+      "deck_style": "Technical research talk with compact tables, adapter diagrams, and ablation visualizations.",
+      "tts_config": "",
+      "video_assembly_plan": "Generate a concise project talk after the paper draft and figures stabilize.",
+      "homepage_plan": "Project page with method overview, main results table, component visualization examples, paper links, and code release."
+    }
+  },
+  "pipeline": {
+    "version": "1.1",
+    "mode": "idea",
+    "startStage": "survey",
+    "stages": {
+      "survey": {
+        "required_elements": [
+          "sections.survey.literature_scope",
+          "sections.survey.synthesis_summary"
+        ],
+        "optional_elements": [
+          "sections.survey.key_references",
+          "sections.survey.open_gaps"
+        ],
+        "quality_gate": [
+          "Novelty boundary against tensorized PEFT and sparse PEFT is explicit and citation-backed.",
+          "The survey identifies at least one concrete open gap connecting efficiency and adapter-level interpretability."
+        ],
+        "task_blueprints": [
+          {
+            "id": "survey_collect_references",
+            "title": "Map the sparse, tensorized, and interpretable PEFT literature",
+            "description": "Collect core papers on LoRA-style PEFT, tensorized adapters, sparse adapters, and interpretability-oriented adaptation, then cluster them by mechanism and claim.",
+            "taskType": "exploration",
+            "recommended_skills": [
+              "academic-researcher"
+            ]
+          },
+          {
+            "id": "survey_summarize_gaps",
+            "title": "Write a novelty memo for sparse tensor pathways in LLM adapters",
+            "description": "Synthesize the literature into a citation-backed memo that states what is already known, what is adjacent, and what remains open for sparse tensorized interpretable PEFT.",
+            "taskType": "analysis",
+            "recommended_skills": [
+              "academic-researcher"
+            ]
+          }
+        ],
+        "recommended_skills": [
+          "academic-researcher"
+        ]
+      },
+      "ideation": {
+        "required_elements": [
+          "sections.ideation.research_goal",
+          "sections.ideation.problem_framing"
+        ],
+        "optional_elements": [
+          "sections.ideation.evidence_plan",
+          "sections.ideation.success_criteria"
+        ],
+        "quality_gate": [
+          "The selected direction is distinct from direct tensorization-only or sparsity-only baselines.",
+          "The idea states a falsifiable claim about efficiency and interpretability rather than only a broad intuition."
+        ],
+        "task_blueprints": [
+          {
+            "id": "ideation_explore_directions",
+            "title": "Generate candidate sparse tensor adapter formulations",
+            "description": "Brainstorm concrete method variants such as CP-style sparse pathways, Tucker-style grouped adapters, or structured sparsity over tensorized LoRA updates, and record trade-offs.",
+            "taskType": "exploration",
+            "recommended_skills": [
+              "inno-idea-generation"
+            ]
+          },
+          {
+            "id": "ideation_select_direction",
+            "title": "Select the first research direction with novelty and feasibility rationale",
+            "description": "Compare candidate directions on novelty risk, implementation complexity, expected interpretability signal, and compatibility with the available compute budget.",
+            "taskType": "analysis",
+            "recommended_skills": [
+              "inno-idea-generation"
+            ]
+          }
+        ],
+        "recommended_skills": [
+          "inno-idea-generation"
+        ]
+      },
+      "experiment": {
+        "required_elements": [
+          "sections.experiment.hypothesis_or_validation_goal",
+          "sections.experiment.method_or_protocol",
+          "sections.experiment.evaluation_plan"
+        ],
+        "optional_elements": [
+          "sections.experiment.dataset_or_data_source"
+        ],
+        "quality_gate": [
+          "The protocol includes LoRA plus at least one sparse or tensorized PEFT baseline.",
+          "Interpretability metrics are defined before experiments begin and are not retrofitted after results."
+        ],
+        "task_blueprints": [
+          {
+            "id": "experiment_define_protocol",
+            "title": "Define the sparse tensor adapter implementation and benchmark ladder",
+            "description": "Specify the adapter parameterization, regularization, training recipe, model sizes, and benchmark progression from small validation settings to larger LLM runs.",
+            "taskType": "implementation",
+            "recommended_skills": [
+              "inno-code-survey",
+              "inno-experiment-dev"
+            ]
+          },
+          {
+            "id": "experiment_run_analysis",
+            "title": "Run baseline PEFT experiments and interpretability probes",
+            "description": "Execute LoRA and selected sparse or tensorized baselines, then compare quality, efficiency, and component-level diagnostics against the proposed method.",
+            "taskType": "analysis",
+            "recommended_skills": [
+              "inno-experiment-dev"
+            ]
+          }
+        ],
+        "recommended_skills": [
+          "inno-code-survey",
+          "inno-experiment-dev"
+        ]
+      },
+      "publication": {
+        "required_elements": [
+          "sections.publication.paper_outline",
+          "sections.publication.submission_checklist"
+        ],
+        "optional_elements": [
+          "sections.publication.figures_tables_plan",
+          "sections.publication.artifact_plan"
+        ],
+        "quality_gate": [
+          "The paper narrative cleanly separates novelty in method design from novelty in interpretability evaluation.",
+          "Claims about interpretability are matched to explicit analyses and caveats."
+        ],
+        "task_blueprints": [
+          {
+            "id": "publication_outline_to_draft",
+            "title": "Expand the sparse tensor adapter outline into a paper draft",
+            "description": "Turn the outline into a draft with explicit claim-evidence alignment for novelty, method, experiments, and limitations.",
+            "taskType": "writing",
+            "recommended_skills": [
+              "inno-paper-writing"
+            ]
+          },
+          {
+            "id": "publication_finalize_artifacts",
+            "title": "Finalize figures, tables, and reproducibility artifacts",
+            "description": "Prepare the main comparison tables, pathway visualizations, and code or appendix artifacts needed for submission.",
+            "taskType": "writing",
+            "recommended_skills": [
+              "inno-paper-writing"
+            ]
+          }
+        ],
+        "recommended_skills": [
+          "inno-paper-writing",
+          "inno-reference-audit"
+        ]
+      },
+      "promotion": {
+        "required_elements": [
+          "sections.promotion.slide_outline"
+        ],
+        "optional_elements": [
+          "sections.promotion.deck_style",
+          "sections.promotion.tts_config",
+          "sections.promotion.video_assembly_plan",
+          "sections.promotion.homepage_plan"
+        ],
+        "quality_gate": [
+          "The promotion materials explain both efficiency and interpretability contributions without overselling novelty.",
+          "Visual assets clearly show the adapter pathway structure and main empirical results."
+        ],
+        "task_blueprints": [
+          {
+            "id": "promotion_draft_outline",
+            "title": "Draft a project talk for sparse tensor pathways",
+            "description": "Prepare a concise slide flow covering motivation, gap analysis, method intuition, results, and limitations.",
+            "taskType": "scripting",
+            "recommended_skills": [
+              "making-academic-presentations"
+            ]
+          },
+          {
+            "id": "promotion_prepare_homepage",
+            "title": "Prepare homepage content and figure selections",
+            "description": "Organize the project page narrative, key tables, diagrams, and links for the final release.",
+            "taskType": "delivery",
+            "recommended_skills": [
+              "making-academic-presentations"
+            ]
+          }
+        ],
+        "recommended_skills": [
+          "making-academic-presentations"
+        ]
+      }
+    }
+  }
+}

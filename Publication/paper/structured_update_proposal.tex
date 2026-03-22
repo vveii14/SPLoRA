@@ -1,0 +1,203 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{enumitem}
+
+\setstretch{1.1}
+\setlength{\parskip}{0.6em}
+\setlength{\parindent}{0pt}
+
+\title{\textbf{From Matrix to Tensor: A Proposal for Structure-Aware Low-Rank Adaptation via Componentized Update Modeling, Regularization, and Efficient Solvers}}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Parameter-efficient fine-tuning (PEFT) methods such as LoRA have made large language model adaptation practical by replacing full-model updates with low-rank parameterizations. However, the dominant formulation still treats the trainable object primarily as a pair of low-rank factors rather than as a structured parameter update in its own right. This proposal develops a unified view of PEFT centered on structured update modeling. In the matrix setting, we propose a three-level progression: first, reparameterizing low-rank adaptation from factor-space to an explicit sum of rank-one update components; second, replacing factor-wise additive penalties with component-level structure-aware regularization; and third, redesigning optimization so that the solver operates on explicit update components rather than on a monolithic low-rank block. After validating this matrix-core framework, we extend it to tensorized adaptation, treating the matrix case as the second-order special case of a more general multilinear update model. Relative to prior work on sparse PEFT, tensorized PEFT, and LoRA variants, the intended contribution is not tensorization or sparsity in isolation, but a unified framework for preserving, constraining, and efficiently solving structured parameter updates with explicit component-level interpretability.
+\end{abstract}
+
+\section{Introduction}
+
+Large language models are commonly adapted by parameter-efficient fine-tuning methods that preserve most pretrained weights and train only a small number of additional parameters. Among these methods, LoRA has become one of the most influential because it offers a simple and effective approximation: the task-specific update to a pretrained weight matrix can be modeled as a low-rank product. In its standard form, a pretrained matrix $W_0$ is adapted through an additive update $\Delta W = BA$, where the trainable factors $A$ and $B$ are low rank and the original parameters remain frozen. This formulation significantly reduces trainable parameter count and memory cost while maintaining strong empirical performance.
+
+Despite this success, the dominant low-rank PEFT formulation leaves a conceptual gap. The actual scientific object of interest is not the pair of factors themselves, but the structured parameter update they induce. Existing methods usually choose a factorization, regularize the factors, and optimize the factors. The update $\Delta W$ is then obtained only indirectly. This factor-first viewpoint becomes increasingly limiting when one wants to ask questions that go beyond raw parameter efficiency: Which components of the update are active? How should structure be preserved under regularization? What optimization strategy is most natural once the update is explicitly decomposed? Can the same principle extend beyond matrices to higher-order parameter objects without collapsing their multilinear structure?
+
+This proposal starts from the premise that PEFT should be revisited from the perspective of \emph{structured update modeling}. Under this view, the matrix case is not the endpoint of the method but the smallest controlled setting in which the full logic can be developed. The proposed work proceeds in three levels within the matrix setting. First, the low-rank update is rewritten as an explicit sum of rank-one components, so that the unit of analysis becomes a structured update pathway rather than a factor block. Second, regularization is redesigned so that it acts on these components as structured outer-product objects rather than only on their separate factors. Third, optimization is redesigned so that the solver operates at the component level, turning the update decomposition into a computational advantage rather than a representational detail. Once this matrix-core framework is established, the same logic is extended to tensors, where preserving multilinear structure is even more important.
+
+The project is motivated by a specific gap in the current literature. Prior work has already established low-rank PEFT, sparse PEFT, and tensorized PEFT as viable families. Therefore, a proposal based only on adding sparsity to LoRA, or only on replacing a matrix with a tensor decomposition, would be weakly differentiated. The more defensible opening is to argue that existing methods do not make the \emph{structured parameter update itself} a first-class scientific object. The novelty target is thus a unified framework in which update modeling, regularization, and optimization are all redesigned around explicit structured components. The resulting claim is narrower than ``tensorized LoRA'' and stronger than ``another sparse PEFT variant'': structured updates should be modeled, constrained, and solved as structured objects.
+
+The proposal is therefore driven by the following research question: \emph{can parameter-efficient adaptation be reformulated so that the learned update is explicitly decomposed into identifiable structured components, regularized at the component level, and optimized in a way that improves analyzability without forfeiting the efficiency benefits of LoRA-style PEFT?} The answer matters for two reasons. Scientifically, it tests whether adapter decomposition can become an interpretable object rather than a hidden byproduct of factorization. Practically, it may yield an adaptation framework that preserves PEFT efficiency while exposing a more modular structure for analysis, pruning, and controlled extension to higher-order parameterizations.
+
+The remainder of the proposal is organized as follows. Section 2 positions the work against LoRA, sparse PEFT, tensorized PEFT, and interpretability-adjacent decomposition methods. Section 3 presents the matrix-core method and its tensor extension. Section 4 states the hypotheses in falsifiable form, and Section 5 summarizes the intended contribution and validation logic.
+
+\section{Related Work}
+
+\subsection{Low-Rank PEFT as the Starting Point}
+
+LoRA established the basic low-rank adaptation paradigm by freezing pretrained weights and learning a low-rank matrix update instead of a dense full-parameter correction. This formulation remains the dominant baseline for PEFT because it offers a favorable trade-off between adaptation quality and trainable parameter count. Subsequent work has refined LoRA through variants that alter rank schedules, scaling, decomposition choices, or optimization details, but the central parameterization remains factor-based. These methods demonstrate that low-rank structure is useful, but they do not by themselves resolve the question of whether the update should be modeled and constrained at the level of explicit components rather than latent factor blocks.
+
+\subsection{Sparse PEFT and the Limits of Factor-Wise Constraints}
+
+Sparse PEFT methods show that adaptation can also benefit from explicit parameter sparsity. Representative examples include Sparse Low-rank Adaptation of Pre-trained Language Models (SoRA), which introduces sparsity-aware rank control, and later sparse fine-tuning methods such as SpIEL and SPP, which preserve or exploit sparse update structure in different ways. This line of work establishes that sparsity is an important axis of PEFT design. However, most sparse PEFT methods still regularize or prune parameters within a preselected adapter parameterization. In that sense, sparsity remains a property imposed on factors or masks rather than a property tied directly to interpretable update components.
+
+\subsection{Tensorized PEFT and the Novelty Boundary}
+
+Tensorized PEFT has already been explored by methods such as LoRETTA, LoTR, and LoRTA, which replace or generalize matrix low-rank updates with tensor decompositions. These methods are directly relevant because they show that multilinear parameterizations can reduce trainable parameter count further or better exploit higher-order structure. At the same time, they create a clear novelty boundary for the present project: tensorization alone is not enough to motivate a new contribution. Any proposal that simply applies a CP-, Tucker-, or tensor-train-style decomposition to LLM updates without a stronger conceptual framing would overlap heavily with this literature.
+
+\subsection{Interpretability-Adjacent Structure Learning}
+
+An additional line of influence comes from work that treats structured low-rank decompositions as potentially interpretable units rather than only as compression devices. A particularly relevant example is Boosted Sparse and Low-Rank Tensor Regression, which models a coefficient tensor as a sum of sparse rank-one components and uses a structure-aware regularization perspective tied to outer-product decomposition. More recently, Low-Rank Adapting Models for Sparse Autoencoders has further reinforced the idea that low-rank adaptation can be coupled to interpretable internal structure. These papers do not solve the LLM PEFT problem directly, but they motivate an alternative scientific perspective: if the trainable update is expressed as a small number of structured components, those components can become analyzable objects rather than opaque compression artifacts.
+
+\subsection{Positioning of the Proposed Work}
+
+The present proposal is therefore positioned against four neighboring clusters. First, unlike standard LoRA, it does not treat factor matrices as the primary unit of design. Second, unlike sparse PEFT methods, it does not treat sparsity as a post hoc modifier of an otherwise unchanged adapter parameterization. Third, unlike tensorized PEFT methods, it does not rely on tensorization itself as the core novelty claim. Fourth, unlike purely post hoc interpretability analyses, it argues that the adapter should be designed around explicit structured components from the outset. The central claim is that update structure should be made explicit in the model, reflected in the regularizer, and exploited by the solver.
+
+This positioning also sharpens what the proposal does \emph{not} claim. It does not claim that rank-one decomposition alone is new for LoRA, that regularization alone is new for LoRA, or that tensorization alone is new for LoRA. Each of those directions already has direct precedent. The intended novelty lies instead in their integration under a single scientific objective: making adapter components explicit as structured pathways, constraining them for identifiability, and evaluating them as first-class objects. This narrower claim is more defensible against existing PEFT literature and provides a cleaner basis for experimental validation.
+
+\section{Method}
+
+\subsection{Overview}
+
+The method is organized as a progression from matrix structured updates to tensor structured updates. The matrix case is used to establish the full modeling logic in the simplest nontrivial setting. The tensor case then generalizes the same logic from bilinear to multilinear structure. Throughout, the core principle is unchanged: the parameter update should be treated as a structured object whose decomposition is explicit, whose regularization preserves that structure, and whose optimization is aligned with that decomposition.
+
+At a high level, the proposal contributes one modeling change, one regularization change, and one optimization change. The modeling change replaces factor-first low-rank adaptation with an explicit component view of the update. The regularization change replaces factor-wise penalties with pathway-aware structural constraints. The optimization change replaces monolithic factor optimization with a component-aware solver. These three elements form the matrix-core contribution; tensorization is then presented as the natural extension of the same principle rather than as an independent novelty claim.
+
+\subsection{Level 1: Componentized Update Modeling in the Matrix Setting}
+
+Standard LoRA writes the trainable update as
+\[
+\Delta W = BA,
+\]
+where $A$ and $B$ are low-rank trainable matrices. The proposed first step rewrites the same update space in an explicitly componentized form:
+\[
+\Delta W = \sum_{k=1}^{K} \sigma_k \hat{u}_k \hat{v}_k^\top,
+\]
+where $\sigma_k$ denotes the strength of the $k$-th component and $\hat{u}_k, \hat{v}_k$ are normalized directional factors. This is mathematically compatible with low-rank adaptation, but it changes the scientific unit from a pair of factors to a collection of rank-one update pathways. Each component is now an explicit outer-product contribution to the final adaptation.
+
+This reparameterization matters for two reasons. First, it makes the composition of the update visible and controllable. Instead of observing only the aggregate product $BA$, one can reason about the concentration, sparsity, and relative contribution of individual pathways. Second, it creates a natural bridge to both interpretability and tensorization. If the matrix update is already represented as a sum of rank-one components, then extending to a multilinear rank-one tensor decomposition becomes conceptually straightforward. In that sense, the matrix formulation is the minimal working instance of a more general structured update model.
+
+\subsection{Level 2: Structure-Aware Regularization}
+
+Once the update is represented as explicit rank-one components, it becomes insufficient to regularize only the factors independently. Conventional regularizers of the form
+\[
+\mathcal{L} = \mathcal{L}_{\mathrm{task}} + \lambda_A \|A\| + \lambda_B \|B\|
+\]
+encourage small parameter values, but they do not directly encode the structural fact that each unit of the update is an outer product. The second step of the proposal is therefore to move from factor-wise additive regularization toward component-aware structure-preserving regularization.
+
+A basic instance of this idea is a sparsity penalty over component amplitudes,
+\[
+\mathcal{R}_{\sigma} = \sum_{k=1}^{K} |\sigma_k|,
+\]
+which encourages the adaptation to use only a small number of active pathways. A stronger version introduces multiplicative coupling between the directional factors, for example
+\[
+\mathcal{R}_{\mathrm{mult}} = \sum_{k=1}^{K} \|\hat{u}_k\|_1 \|\hat{v}_k\|_1
+\]
+or a scaled variant involving $|\sigma_k|$. The motivation is not that multiplication is intrinsically superior, but that the complexity of an outer-product component is not naturally captured by treating its factors as unrelated parameter blocks. If the parameter update is built from structured pathways, then the regularizer should also act on pathways as whole structured objects.
+
+The expected benefit of this level is an inductive bias that favors a smaller number of sharper and more analyzable components. In proposal terms, the scientific claim is that component-aware regularization better preserves structured update organization than additive penalties defined only over factor matrices.
+
+\subsection{Level 3: Component-Aware Optimization}
+
+The third level concerns optimization. Once the update is explicitly decomposed into rank-one components, the solver no longer needs to treat the trainable object as a single monolithic low-rank block. Instead, each component can serve as a local computational unit for refinement, sequential update, or partial parallel update. In abstract form, if
+\[
+\Delta W^{(t)} = \sum_{k=1}^{K} \sigma_k^{(t)} \hat{u}_k^{(t)} \hat{v}_k^{(t)\top},
+\]
+then the solver can be designed to update one or several components through component-level operators rather than relying only on end-to-end factor optimization.
+
+This level should not be framed as a generic engineering speedup. Its role is more specific: the explicit component decomposition induced by Level 1 opens a solver design space that is less natural in the original factor-block view. The aim is to test whether a component-aware solver can improve wall-clock convergence or computational efficiency while preserving the task quality of the same structured update model. In that sense, optimization becomes the computational consequence of the new parameterization rather than an unrelated implementation trick.
+
+\subsection{Extension: From Matrix Structured Updates to Tensor Structured Updates}
+
+After the matrix setting is validated, the same framework extends naturally to higher-order parameter objects. A matrix is a second-order tensor, so the matrix case is best understood as the simplest member of a broader multilinear family. The tensorized extension writes the update as
+\[
+\Delta \mathcal{W} = \sum_{k=1}^{K} \sigma_k \hat{u}^{(1)}_k \otimes \hat{u}^{(2)}_k \otimes \cdots \otimes \hat{u}^{(M)}_k,
+\]
+where each term is a rank-one tensor component and $M$ is the order of the parameter object or induced reshape.
+
+This extension is conceptually natural because the research object has not changed. The goal is still to model, constrain, and efficiently solve a structured parameter increment. What changes is only the structural order of the object. In fact, the motivation for structure-aware modeling is arguably stronger in the tensor case, because naive flattening can erase multilinear relationships across modes, heads, channels, or grouped architectural dimensions. The tensor setting therefore serves as the natural generalization of the matrix theory rather than as an independent research direction.
+
+\subsection{Evaluation Strategy}
+
+The experimental design follows the same staged logic as the method. First, the matrix formulation will be compared against standard LoRA and closely related low-rank baselines to test whether explicit componentization offers benefits in component concentration, sparsity, and analyzability without unacceptable task degradation. Second, regularization will be isolated by comparing no additional regularization, conventional additive factor-wise regularization, and the proposed structure-aware component-level penalties under the same matrix parameterization. Third, the solver will be isolated by holding the parameterization and regularizer fixed while comparing baseline optimization against a component-aware optimization scheme. Only after these claims are tested in the matrix setting will the tensor extension be evaluated against tensorized and sparse PEFT baselines. Across all stages, the evaluation will report downstream task quality, trainable parameter count, runtime, memory cost, and component-level diagnostics such as ablation impact, concentration, and stability across seeds.
+
+This staged evaluation is necessary for claim isolation. If the update parameterization, regularizer, and solver are all changed simultaneously, then any empirical gain becomes difficult to attribute. The proposal therefore treats each layer as a separately testable hypothesis. Matrix experiments will answer whether explicit componentization has value on its own, whether pathway-level regularization improves structural concentration beyond standard penalties, and whether the solver redesign offers measurable computational advantages at fixed modeling assumptions. Only after these questions are answered will the tensor extension be used to test whether preserving multilinear structure provides additional benefits beyond the matrix-core method.
+
+\section{Hypotheses}
+
+The proposal is driven by four connected hypotheses. The first hypothesis is that explicit componentized update modeling yields a more analyzable representation of the adaptation than a standard factor-block parameterization, without requiring a loss in the basic efficiency advantages of low-rank PEFT. The second hypothesis is that structure-aware regularization at the component level produces sparser and more concentrated updates than additive factor-wise regularization, and that these updates will exhibit clearer component-level behavior under ablation and stability analyses. The third hypothesis is that a component-aware solver, derived from the explicit rank-one decomposition, will reach target quality more efficiently in wall-clock time than a solver that optimizes the same model only as a monolithic factor block. The fourth hypothesis is that the matrix-core framework will extend naturally to higher-order parameterizations, and that this extension will be particularly useful when the adapted parameter object contains genuine multilinear structure that would be weakened by flattening.
+
+These hypotheses are intended to be falsifiable. If componentization fails to improve analyzability, if multiplicative or pathway-level regularization offers no structural benefit over additive baselines, or if the component-aware solver does not improve convergence under controlled comparisons, then the main conceptual claims of the proposal would be weakened. Likewise, if tensorization adds no benefit beyond existing tensorized PEFT baselines once the matrix framework is fixed, then the tensor extension should be treated as optional rather than central. This proposal therefore emphasizes clean stage-wise validation rather than bundling all modifications into a single method and attributing all gains to the entire stack at once.
+
+\section{Expected Contribution}
+
+The expected contribution of this project is a more unified theory of parameter-efficient adaptation centered on structured parameter updates. The work does not claim novelty from sparsity alone, tensorization alone, or low-rank decomposition alone, since each of these already has substantial prior art. Instead, it proposes that the main scientific object should be the structured update itself, and that this object should determine the parameterization, the regularizer, and the solver together. If successful, the result will be a matrix-to-tensor framework for PEFT in which efficiency and interpretability are linked through explicit structured components rather than treated as separate afterthoughts.
+
+More concretely, the intended contribution has three layers. First, it offers a conceptual reframing of PEFT from factor-based adaptation to structured update modeling. Second, it introduces a method family in which component identity is explicit enough to support pathway-level regularization and analysis. Third, it provides an experimental template for evaluating adapters not only by downstream task metrics and efficiency, but also by component concentration, ablation sensitivity, and stability. Even if the full tensor extension proves less useful than expected, the matrix-core contribution would still constitute a meaningful result if it demonstrates that explicit structured updates are easier to analyze and control than conventional factor-block LoRA updates.
+
+\begin{thebibliography}{99}
+
+\bibitem{hu2021lora}
+Hu, E. J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L., and Chen, W. (2021).
+\newblock LoRA: Low-Rank Adaptation of Large Language Models.
+\newblock \emph{arXiv preprint} arXiv:2106.09685.
+\newblock \url{https://arxiv.org/abs/2106.09685}
+
+\bibitem{he2018boosted}
+He, L., Zhou, H., Zhuang, X., and Carin, L. (2018).
+\newblock Boosted Sparse and Low-Rank Tensor Regression.
+\newblock In \emph{Advances in Neural Information Processing Systems 31 (NeurIPS 2018)}.
+\newblock \url{https://papers.neurips.cc/paper/7379-boosted-sparse-and-low-rank-tensor-regression}
+
+\bibitem{ding2023sora}
+Ding, N., Qin, Y., Yang, G., Wei, F., Yang, Z., Su, Y., Hu, S., Chen, Y., Chan, C.-M., Chen, W., Yi, J., Zheng, B., Liu, Z., Sun, M., and Zhou, J. (2023).
+\newblock Sparse Low-rank Adaptation of Pre-trained Language Models.
+\newblock In \emph{Proceedings of EMNLP 2023}.
+\newblock \url{https://aclanthology.org/2023.emnlp-main.252/}
+
+\bibitem{yang2024loretta}
+Yang, C., Liu, Y., Chen, M., Zhou, J., and Zhu, J. (2024).
+\newblock LoRETTA: Low-Rank Economic Tensor-Train Adaptation for Ultra-Low-Parameter Fine-Tuning of Large Language Models.
+\newblock In \emph{Proceedings of NAACL 2024}.
+\newblock \url{https://aclanthology.org/2024.naacl-long.174/}
+
+\bibitem{bershatsky2024lotr}
+Bershatsky, D., Cherniuk, D., Daulbaev, T., Mikhalev, A., and Oseledets, I. (2024).
+\newblock LoTR: Low Tensor Rank Weight Adaptation.
+\newblock \emph{arXiv preprint}. Available through arXiv-indexed sources.
+\newblock \url{https://bohrium.dp.tech/paper/arxiv/2408.01008}
+
+\bibitem{hounie2024lorta}
+Hounie, J., De, S., Gu, A., and collaborators (2024).
+\newblock LoRTA: Low Rank Tensor Adaptation of Large Language Models.
+\newblock \emph{arXiv preprint} arXiv:2410.04060.
+\newblock \url{https://arxiv.org/abs/2410.04060}
+
+\bibitem{ansell2024spiel}
+Ansell, A., Chen, C., and collaborators (2024).
+\newblock Scaling Sparse Fine-Tuning to Large Language Models.
+\newblock \emph{arXiv preprint} arXiv:2401.16405.
+\newblock \url{https://arxiv.org/abs/2401.16405}
+
+\bibitem{lu2024spp}
+Lu, X., and collaborators (2024).
+\newblock SPP: Sparsity-Preserved Parameter-Efficient Fine-Tuning for Large Language Models.
+\newblock In \emph{ICML 2024}.
+\newblock \url{https://arxiv.org/abs/2405.16057}
+
+\bibitem{chen2025sae}
+Chen, C., and collaborators (2025).
+\newblock Low-Rank Adapting Models for Sparse Autoencoders.
+\newblock In \emph{ICML 2025}.
+\newblock \url{https://icml.cc/virtual/2025/poster/44210}
+
+\end{thebibliography}
+
+\end{document}

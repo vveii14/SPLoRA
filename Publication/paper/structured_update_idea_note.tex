@@ -1,0 +1,291 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{setspace}
+
+\setstretch{1.08}
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{0pt}
+
+\title{\textbf{Structured Update Modeling for PEFT: Idea Note}}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Core Claim}
+
+The proposal should not be framed as ``LoRA + rank-1 + regularization + tensorization.'' Each of these ingredients already has direct precedent in the PEFT literature. The defensible claim is narrower and more structural:
+\[
+\text{make adapter components explicit as structured pathways, regularize them for identifiability, and optimize them as first-class objects.}
+\]
+
+Under this view, the contribution is built in three levels in the matrix setting and only then extended to the tensor setting:
+\[
+\text{update reparameterization} \;\rightarrow\; \text{structure-aware regularization} \;\rightarrow\; \text{component-aware solver}.
+\]
+
+Tensorization is not the third level itself. It is the natural generalization of the same structured-update principle from order-2 to higher-order parameter objects.
+
+\section{Starting Point: Standard LoRA}
+
+Standard LoRA adapts a pretrained weight matrix $W_0$ through
+\[
+W = W_0 + \Delta W,\qquad \Delta W = BA,
+\]
+where $B \in \mathbb{R}^{d_{\text{out}} \times r}$ and $A \in \mathbb{R}^{r \times d_{\text{in}}}$ with $r \ll \min(d_{\text{out}}, d_{\text{in}})$.
+
+This factorization is efficient, but it hides the internal structure of the update. The model trains factors, not explicit update components. If one wants to reason about pathway sparsity, pathway identifiability, component ablation, or solver modularity, the factor-block view is not the most natural coordinate system.
+
+\section{Level 1: Reparameterize the Update Itself}
+
+\subsection{From Factor Blocks to Explicit Rank-One Components}
+
+Because
+\[
+B = [b_1,\dots,b_r], \qquad
+A =
+\begin{bmatrix}
+a_1^\top \\
+\vdots \\
+a_r^\top
+\end{bmatrix},
+\]
+standard LoRA can be rewritten as
+\[
+\Delta W = BA = \sum_{k=1}^{r} b_k a_k^\top.
+\]
+This identity is elementary, but the proposal treats it as a modeling decision rather than a hidden algebraic fact.
+
+We further separate scale from direction and write
+\[
+\Delta W = \sum_{k=1}^{K} \sigma_k \hat{u}_k \hat{v}_k^\top,
+\]
+where $\|\hat{u}_k\|_2 = \|\hat{v}_k\|_2 = 1$ and $\sigma_k \in \mathbb{R}$ absorbs the component magnitude. The point of this reparameterization is not merely notation. It changes the primitive object of the method:
+\[
+\text{from factor matrices } (A,B) \quad \text{to structured pathways } \{\sigma_k,\hat{u}_k,\hat{v}_k\}_{k=1}^{K}.
+\]
+
+\subsection{Why This Matters}
+
+Once the update is written explicitly as a sum of pathways, several questions become well-posed:
+\[
+\text{Which pathways are active?}\qquad
+\text{Which pathways matter most?}\qquad
+\text{Which pathways are stable across runs?}
+\]
+
+This gives a more direct route to component-level pruning, ablation, concentration analysis, and interpretability. The intended claim of Level 1 is therefore:
+
+\emph{Low-rank adaptation should be modeled in update space rather than only in factor space, because the update decomposition itself is the object we want to analyze and control.}
+
+\section{Level 2: Regularize the Pathways, Not Only the Factors}
+
+\subsection{The Limitation of Additive Factor Regularization}
+
+The usual regularized objective has the form
+\[
+\mathcal{L}
+=
+\mathcal{L}_{\text{task}}(W_0+\Delta W)
++ \lambda \mathcal{R}.
+\]
+Under a factor-first view, regularization is usually applied as
+\[
+\mathcal{R}_{\text{add}}
+=
+\|A\| + \|B\|,
+\]
+or in component form,
+\[
+\mathcal{R}_{\text{add}}
+=
+\sum_{k=1}^{K}
+\left(
+\alpha \|\hat{u}_k\|_p + \beta \|\hat{v}_k\|_q
+\right).
+\]
+
+Such penalties shrink parameters, but they do not explicitly encode the fact that the basic unit of the update is an outer product. They regularize factors separately, not pathways jointly.
+
+\subsection{Component-Level Regularization}
+
+If the update is
+\[
+\Delta W = \sum_{k=1}^{K} \sigma_k \hat{u}_k \hat{v}_k^\top,
+\]
+then the most basic component-level sparsity penalty is
+\[
+\mathcal{R}_{\sigma} = \sum_{k=1}^{K} |\sigma_k|.
+\]
+This encourages a small number of active pathways and already aligns regularization with the pathway view.
+
+A stronger structure-aware form is a multiplicative penalty such as
+\[
+\mathcal{R}_{\text{mult}}
+=
+\sum_{k=1}^{K}
+\|\hat{u}_k\|_1 \|\hat{v}_k\|_1,
+\]
+or
+\[
+\mathcal{R}_{\text{mult-scale}}
+=
+\sum_{k=1}^{K}
+|\sigma_k| \|\hat{u}_k\|_1 \|\hat{v}_k\|_1.
+\]
+
+The point is not that multiplication is automatically better. The point is that if the update unit is an outer-product pathway, then the regularizer should measure pathway complexity as a pathway, not as two unrelated vectors. This is where the intuition from sparse and low-rank tensor regression becomes relevant: structural complexity is induced by the factorization itself.
+
+\subsection{Intended Level-2 Claim}
+
+The Level-2 claim is:
+
+\emph{Once adaptation is parameterized as a sum of structured pathways, regularization should act on pathways as whole outer-product objects rather than only on factor matrices independently.}
+
+This is the part of the proposal that is closest to the teacher's ``multiplicative regularization'' intuition.
+
+\section{Level 3: Solve at the Component Level}
+
+\subsection{Why a New Solver Follows Naturally}
+
+After Level 1 and Level 2, the optimization problem becomes
+\[
+\min_{\{\sigma_k,\hat{u}_k,\hat{v}_k\}_{k=1}^{K}}
+\mathcal{L}_{\text{task}}
+\left(
+W_0+\sum_{k=1}^{K}\sigma_k \hat{u}_k \hat{v}_k^\top
+\right)
++ \lambda \mathcal{R}\big(\{\sigma_k,\hat{u}_k,\hat{v}_k\}\big).
+\]
+
+If this is the true parameterization, then optimizing only through monolithic factor blocks is no longer the only natural choice. The explicit rank-one decomposition exposes a modular solver structure:
+\[
+\Delta W^{(t)} = \sum_{k=1}^{K}\Delta W_k^{(t)},\qquad
+\Delta W_k^{(t)} = \sigma_k^{(t)} \hat{u}_k^{(t)} \hat{v}_k^{(t)\top}.
+\]
+One can therefore design updates at the component level:
+\[
+(\sigma_k^{(t+1)},\hat{u}_k^{(t+1)},\hat{v}_k^{(t+1)})
+=
+\mathcal{S}_k(\nabla \mathcal{L}, \mathcal{R}, \Delta W^{(t)}).
+\]
+
+\subsection{Intended Level-3 Claim}
+
+The Level-3 claim is not ``we found an optimization trick.'' It is:
+
+\emph{Once the update is decomposed into explicit pathways, the solver should exploit that decomposition rather than pretending the update is still a single opaque low-rank block.}
+
+So Level 3 is a computational consequence of the structured-update view.
+
+\section{Extension: From Matrix to Tensor}
+
+The matrix case should be treated as the minimal working case, not the entire story. A matrix is already a second-order tensor, so the natural generalization is
+\[
+\Delta \mathcal{W}
+=
+\sum_{k=1}^{K}
+\sigma_k
+\hat{u}^{(1)}_k \otimes \hat{u}^{(2)}_k \otimes \cdots \otimes \hat{u}^{(M)}_k.
+\]
+
+The important point is that the research question does not change. The object is still a structured parameter increment; only its order changes. This is why matrix-to-tensor is logically natural but should not be presented as the whole novelty. The real novelty, if it exists, comes from preserving the same three principles under generalization:
+\[
+\text{explicit structured components}
+\;\rightarrow\;
+\text{component-level regularization}
+\;\rightarrow\;
+\text{component-aware optimization}.
+\]
+
+\section{What Is Already Done in Prior Work?}
+
+\subsection{Comparison by Ingredient}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{|>{\raggedright\arraybackslash}p{2.8cm}|>{\raggedright\arraybackslash}p{4.4cm}|>{\raggedright\arraybackslash}p{5.1cm}|}
+\hline
+\textbf{Ingredient} & \textbf{Representative prior work} & \textbf{Implication for this project} \\
+\hline
+Low-rank PEFT baseline & LoRA & Baseline only; cannot be claimed as novelty \\
+\hline
+Rank-1 or componentized view & AROMA-style rank-one construction; interpretability analyses of rank-1 LoRA components & Rank-1 decomposition alone is not new; the contribution must be in what is done with the components \\
+\hline
+Regularized LoRA & SoRA, FR-LoRA, other sparse or stability-oriented LoRA variants & Generic regularization over LoRA is not new; the opening is pathway-level or multiplicative structure-aware regularization \\
+\hline
+Tensorized LoRA & LoRETTA, LoTR, LoRTA & Tensorization alone is not new; it must be subordinated to a stronger structured-update claim \\
+\hline
+Interpretability-adjacent structured decomposition & Boosted Sparse and Low-Rank Tensor Regression; Low-Rank Adapting Models for Sparse Autoencoders & These motivate the pathway and identifiability perspective, but do not yet settle the LoRA-specific method design \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Comparison by Full Claim}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{|>{\raggedright\arraybackslash}p{4.4cm}|>{\raggedright\arraybackslash}p{3.3cm}|>{\raggedright\arraybackslash}p{4.8cm}|}
+\hline
+\textbf{Claim formulation} & \textbf{Novelty strength} & \textbf{Reason} \\
+\hline
+``We use LoRA with rank-1 decomposition.'' & Weak & Rank-1 views of LoRA are already known \\
+\hline
+``We use LoRA with regularization.'' & Weak & Multiple LoRA regularization lines already exist \\
+\hline
+``We use tensorized LoRA.'' & Weak & Tensorized PEFT is already a populated area \\
+\hline
+``We combine rank-1 decomposition, regularization, and tensorization.'' & Moderate to weak & The ingredients exist; direct composition risks looking incremental \\
+\hline
+``We treat adapter components as explicit task pathways, regularize them for identifiability, align them with architectural modes through tensorization, and evaluate them as first-class interpretable objects.'' & Strongest available position & The novelty shifts from ingredients to scientific object, organization, and evaluation protocol \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{What the Paper Should Actually Claim}
+
+The paper should not say:
+\[
+\text{``our novelty is rank-1 + regularization + tensor decomposition.''}
+\]
+
+It should say something closer to:
+
+\emph{We do not claim novelty from rank-1 decomposition, regularization, or tensorization in isolation. We claim novelty from treating adapter components as explicit structured pathways, regularizing them for identifiability, optimizing them at the component level, and evaluating them as first-class interpretable objects.}
+
+That is the narrowest version of the claim that is still ambitious enough to support a paper.
+
+\section{Immediate Research Decision}
+
+If the project needs a first implementation direction, the cleanest one is:
+
+\begin{enumerate}
+\item start in the matrix setting,
+\item use explicit rank-one pathway decomposition,
+\item begin with component sparsity over $\sigma_k$,
+\item then add multiplicative pathway regularization,
+\item treat tensorization as a second-stage extension rather than the opening claim.
+\end{enumerate}
+
+This ordering preserves the logic of the idea and reduces novelty risk. It makes the matrix formulation the minimal testbed in which the update, regularizer, and solver can all be validated separately before the method is generalized to higher-order structures.
+
+\section{References Mentioned in the Comparison}
+
+\begin{itemize}
+\item Hu et al., \emph{LoRA: Low-Rank Adaptation of Large Language Models}, 2021. \url{https://arxiv.org/abs/2106.09685}
+\item He et al., \emph{Boosted Sparse and Low-Rank Tensor Regression}, NeurIPS 2018. \url{https://arxiv.org/abs/1811.01158}
+\item Ding et al., \emph{Sparse Low-rank Adaptation of Pre-trained Language Models}, EMNLP 2023. \url{https://aclanthology.org/2023.emnlp-main.252/}
+\item Yang et al., \emph{LoRETTA: Low-Rank Economic Tensor-Train Adaptation for Ultra-Low-Parameter Fine-Tuning of Large Language Models}, NAACL 2024. \url{https://aclanthology.org/2024.naacl-long.174/}
+\item Bershatsky et al., \emph{LoTR: Low Tensor Rank Weight Adaptation}, 2024.
+\item Hounie et al., \emph{LoRTA: Low Rank Tensor Adaptation of Large Language Models}, 2024. \url{https://arxiv.org/abs/2410.04060}
+\end{itemize}
+
+\end{document}
