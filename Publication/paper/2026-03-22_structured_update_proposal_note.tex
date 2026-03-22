@@ -1,6 +1,14 @@
-# Structured Update Proposal Note
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,longtable,hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}
+\title{Structured Update Proposal Note}
+\date{}
 
-## 1. What This Proposal Should Actually Be About
+\begin{document}
+\maketitle
+
+\section{What This Proposal Should Actually Be About}
 
 This proposal should not be written as a loose stack of ingredients:
 
@@ -16,7 +24,7 @@ That formulation is too weak because each piece already has direct precedent in 
 
 This changes the object of interest. Instead of treating LoRA as merely a low-rank parameter-saving trick, the proposal treats the adapter update itself as a structured object whose internal decomposition should be visible, constrained, and analyzable.
 
-## 2. Level 1: Reparameterize the Update
+\section{Level 1: Reparameterize the Update}
 
 The starting point is standard LoRA:
 
@@ -47,14 +55,16 @@ Here, $\sigma_k$ is the component strength and $(\hat{u}_k,\hat{v}_k)$ represent
 
 Once the update is written in this form, the following questions become natural:
 
-- which pathways are active?
-- which pathways dominate the update norm?
-- which pathways survive pruning or ablation?
-- which pathways are stable across random seeds?
+\begin{itemize}
+\item which pathways are active?
+\item which pathways dominate the update norm?
+\item which pathways survive pruning or ablation?
+\item which pathways are stable across random seeds?
+\end{itemize}
 
 That is the main value of Level 1. The update decomposition becomes a first-class scientific object.
 
-## 3. Level 2: Regularize the Pathways
+\section{Level 2: Regularize the Pathways}
 
 With standard factor-first LoRA, the regularized objective is usually written as
 
@@ -62,7 +72,7 @@ With standard factor-first LoRA, the regularized objective is usually written as
 \mathcal{L}
 =
 \mathcal{L}_{\text{task}}(W_0+\Delta W)
- \lambda \mathcal{R},
++ \lambda \mathcal{R},
 \]
 with penalties of the form
 \[
@@ -112,7 +122,7 @@ This is also where the proposal differs from existing regularized LoRA methods s
 \text{the regularizer should help identify pathways, not only shrink parameters.}
 \]
 
-## 4. Level 3: Solve at the Component Level
+\section{Level 3: Solve at the Component Level}
 
 After Levels 1 and 2, the optimization problem becomes
 
@@ -122,7 +132,7 @@ After Levels 1 and 2, the optimization problem becomes
 \left(
 W_0+\sum_{k=1}^{K}\sigma_k \hat{u}_k \hat{v}_k^\top
 \right)
- \lambda \mathcal{R}\big(\{\sigma_k,\hat{u}_k,\hat{v}_k\}\big).
++ \lambda \mathcal{R}\big(\{\sigma_k,\hat{u}_k,\hat{v}_k\}\big).
 \]
 
 At this point, continuing to think only in terms of monolithic factor optimization is no longer natural. The decomposition
@@ -131,6 +141,7 @@ At this point, continuing to think only in terms of monolithic factor optimizati
 \Delta W^{(t)} = \sum_{k=1}^{K} \Delta W_k^{(t)}, \qquad
 \Delta W_k^{(t)} = \sigma_k^{(t)} \hat{u}_k^{(t)} \hat{v}_k^{(t)\top}
 \]
+
 exposes an explicit modular update structure. A solver can then be defined over components:
 
 \[
@@ -141,7 +152,7 @@ exposes an explicit modular update structure. A solver can then be defined over 
 
 The proposal should be careful here. The claim is not that a new solver is automatically better because it is new. The claim is that once the model is written in explicit pathways, a component-aware solver becomes a direct computational consequence of the model structure. That is why Level 3 should be presented as solver redesign induced by the reformulation, not as an isolated engineering optimization.
 
-## 5. Matrix to Tensor Is an Extension, Not the Main Novelty
+\section{Matrix to Tensor Is an Extension, Not the Main Novelty}
 
 The matrix case is not the whole story, but it must be the first story. Once the structured-update view is accepted, the natural extension is
 
@@ -161,86 +172,115 @@ This is where tensorization enters. But tensorization itself is not a novelty cl
 
 That is a more defensible claim than ``we use tensor LoRA.''
 
-## 6. What Existing Work Has Already Done
+\section{What Existing Work Has Already Done}
 
-| Topic | Existing papers | What is already done | What remains open |
-| --- | --- | --- | --- |
-| Low-rank PEFT baseline | LoRA [1] | Low-rank update parameterization is established | Not novel |
-| Rank-1 / componentized view | AROMA [2] | Rank structure can be made explicit | Components are not yet the central scientific object |
-| Regularized LoRA | SoRA [3], SPP [4] | Sparsity and regularization over LoRA already exist | Pathway identifiability is not the main stated target |
-| Tensorized LoRA | LoRETTA [5], LoTR [6], LoRTA [7] | Tensorization is established | Tensorization cannot stand alone as the novelty claim |
-| Structure-induced regularization intuition | Boosted Sparse and Low-Rank Tensor Regression [8] | Multiplicative structural regularization is conceptually supported | Not yet translated cleanly into a pathway-first LoRA proposal |
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.2\textwidth} >{\raggedright\arraybackslash}p{0.22\textwidth} >{\raggedright\arraybackslash}p{0.22\textwidth} >{\raggedright\arraybackslash}p{0.26\textwidth}}
+\toprule
+Topic & Existing papers & What is already done & What remains open \\
+\midrule
+\endhead
+Low-rank PEFT baseline & LoRA [1] & Low-rank update parameterization is established & Not novel \\
+Rank-1 / componentized view & AROMA [2] & Rank structure can be made explicit & Components are not yet the central scientific object \\
+Regularized LoRA & SoRA [3], SPP [4] & Sparsity and regularization over LoRA already exist & Pathway identifiability is not the main stated target \\
+Tensorized LoRA & LoRETTA [5], LoTR [6], LoRTA [7] & Tensorization is established & Tensorization cannot stand alone as the novelty claim \\
+Structure-induced regularization intuition & Boosted Sparse and Low-Rank Tensor Regression [8] & Multiplicative structural regularization is conceptually supported & Not yet translated cleanly into a pathway-first LoRA proposal \\
+\bottomrule
+\end{longtable}
 
-## 7. What This Proposal Should Claim
+\section{What This Proposal Should Claim}
 
 The proposal should not say:
 
-> We propose LoRA with rank-1 decomposition, regularization, and tensor decomposition.
+\begin{quote}
+We propose LoRA with rank-1 decomposition, regularization, and tensor decomposition.
+\end{quote}
 
 It should say something closer to:
 
-> We do not claim novelty from rank-1 decomposition, regularization, or tensorization in isolation. We claim novelty from treating adapter components as explicit structured pathways, regularizing them for identifiability at the component level, and evaluating them as first-class interpretable objects. Tensorization then serves as the natural generalization of the same pathway view to higher-order parameter structure.
+\begin{quote}
+We do not claim novelty from rank-1 decomposition, regularization, or tensorization in isolation. We claim novelty from treating adapter components as explicit structured pathways, regularizing them for identifiability at the component level, and evaluating them as first-class interpretable objects. Tensorization then serves as the natural generalization of the same pathway view to higher-order parameter structure.
+\end{quote}
 
 That version is narrower, but it is also much more likely to survive contact with the literature.
 
-## 8. Immediate Experimental Consequence
+\section{Immediate Experimental Consequence}
 
 The first implementation path should therefore be conservative:
 
-1. stay in the matrix setting,
-2. use explicit rank-1 pathway decomposition,
-3. start with pathway amplitude sparsity over $\sigma_k$,
-4. then test multiplicative pathway regularization,
-5. treat tensorization as a second-stage extension after the matrix-core logic is validated.
+\begin{enumerate}
+\item stay in the matrix setting,
+\item use explicit rank-1 pathway decomposition,
+\item start with pathway amplitude sparsity over $\sigma_k$,
+\item then test multiplicative pathway regularization,
+\item treat tensorization as a second-stage extension after the matrix-core logic is validated.
+\end{enumerate}
 
 This ordering cleanly separates the three internal claims:
 
-- update modeling,
-- regularization,
-- solver design.
+\begin{itemize}
+\item update modeling,
+\item regularization,
+\item solver design.
+\end{itemize}
 
 It also gives the project a much cleaner ablation story.
 
-## 9. Candidate Code and Dataset Support
+\section{Candidate Code and Dataset Support}
 
 Public code references already acquired in this workspace:
 
-| Method | Local repo |
-| --- | --- |
-| LoTR [6] | `Experiment/code_references/lotr` |
-| LoRTA [7] | `Experiment/code_references/lorta` |
-| LoRETTA [5] | `Experiment/code_references/loretta` |
-| SPP [4] | `Experiment/code_references/spp` |
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.22\textwidth} >{\raggedright\arraybackslash}p{0.48\textwidth}}
+\toprule
+Method & Local repo \\
+\midrule
+\endhead
+LoTR [6] & \texttt{Experiment/code\_references/lotr} \\
+LoRTA [7] & \texttt{Experiment/code\_references/lorta} \\
+LoRETTA [5] & \texttt{Experiment/code\_references/loretta} \\
+SPP [4] & \texttt{Experiment/code\_references/spp} \\
+\bottomrule
+\end{longtable}
 
 Suggested benchmark ladder for later experiment design:
 
-| Stage | Dataset | Citation |
-| --- | --- | --- |
-| Small validation | GLUE | [9] |
-| Stronger classification | SuperGLUE | [10] |
-| Reasoning transfer | GSM8K | [11] |
-| Broad capability check | MMLU | [12] |
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.22\textwidth} >{\raggedright\arraybackslash}p{0.24\textwidth} >{\raggedright\arraybackslash}p{0.18\textwidth}}
+\toprule
+Stage & Dataset & Citation \\
+\midrule
+\endhead
+Small validation & GLUE & [9] \\
+Stronger classification & SuperGLUE & [10] \\
+Reasoning transfer & GSM8K & [11] \\
+Broad capability check & MMLU & [12] \\
+\bottomrule
+\end{longtable}
 
-## 10. Environment Notes
+\section{Environment Notes}
 
 Two requested skill executions were blocked by the current environment:
 
-- `gemini-deep-research` could not run because `GEMINI_API_KEY` is not set.
-- `inno-figure-gen` could not run because both `uv` and `GEMINI_API_KEY` are unavailable.
+\begin{itemize}
+\item \texttt{gemini-deep-research} could not run because \texttt{GEMINI\_API\_KEY} is not set.
+\item \texttt{inno-figure-gen} could not run because both \texttt{uv} and \texttt{GEMINI\_API\_KEY} are unavailable.
+\end{itemize}
 
 This does not affect the core literature conclusions, but it does mean no AI-generated figure was produced in this pass.
 
-## References
+\section{References}
 
-[1] Hu et al. *LoRA: Low-Rank Adaptation of Large Language Models*. arXiv 2021. https://arxiv.org/abs/2106.09685  
-[2] Lu et al. *AROMA: Adaptive Rank Reduction of Low-Rank Adaptation for Large Language Models*. EMNLP 2025. https://aclanthology.org/2025.emnlp-main.170/  
-[3] Ding et al. *Sparse Low-rank Adaptation of Pre-trained Language Models*. EMNLP 2023. https://aclanthology.org/2023.emnlp-main.252/  
-[4] Lu et al. *SPP: Sparsity-Preserved Parameter-Efficient Fine-Tuning for Large Language Models*. arXiv 2024. https://arxiv.org/abs/2405.16057  
-[5] Yang et al. *LoRETTA: Low-Rank Economic Tensor-Train Adaptation for Ultra-Low-Parameter Fine-Tuning of Large Language Models*. NAACL 2024. https://aclanthology.org/2024.naacl-long.174/  
-[6] Bershatsky et al. *LoTR: Low Tensor Rank Weight Adaptation*. arXiv 2024. https://arxiv.org/abs/2402.01376  
-[7] Hounie et al. *LoRTA: Low Rank Tensor Adaptation of Large Language Models*. arXiv 2024. https://arxiv.org/abs/2410.04060  
-[8] He et al. *Boosted Sparse and Low-Rank Tensor Regression*. NeurIPS 2018. https://arxiv.org/abs/1811.01158  
-[9] Wang et al. *GLUE: A Multi-Task Benchmark and Analysis Platform for Natural Language Understanding*. https://arxiv.org/abs/1804.07461  
-[10] Wang et al. *SuperGLUE: A Stickier Benchmark for General-Purpose Language Understanding Systems*. https://arxiv.org/abs/1905.00537  
-[11] Cobbe et al. *Training Verifiers to Solve Math Word Problems*. https://arxiv.org/abs/2110.14168  
-[12] Hendrycks et al. *Measuring Massive Multitask Language Understanding*. https://arxiv.org/abs/2009.03300  
+\begin{enumerate}
+\item Hu et al. \textit{LoRA: Low-Rank Adaptation of Large Language Models}. arXiv 2021. \url{https://arxiv.org/abs/2106.09685}
+\item Lu et al. \textit{AROMA: Adaptive Rank Reduction of Low-Rank Adaptation for Large Language Models}. EMNLP 2025. \url{https://aclanthology.org/2025.emnlp-main.170/}
+\item Ding et al. \textit{Sparse Low-rank Adaptation of Pre-trained Language Models}. EMNLP 2023. \url{https://aclanthology.org/2023.emnlp-main.252/}
+\item Lu et al. \textit{SPP: Sparsity-Preserved Parameter-Efficient Fine-Tuning for Large Language Models}. arXiv 2024. \url{https://arxiv.org/abs/2405.16057}
+\item Yang et al. \textit{LoRETTA: Low-Rank Economic Tensor-Train Adaptation for Ultra-Low-Parameter Fine-Tuning of Large Language Models}. NAACL 2024. \url{https://aclanthology.org/2024.naacl-long.174/}
+\item Bershatsky et al. \textit{LoTR: Low Tensor Rank Weight Adaptation}. arXiv 2024. \url{https://arxiv.org/abs/2402.01376}
+\item Hounie et al. \textit{LoRTA: Low Rank Tensor Adaptation of Large Language Models}. arXiv 2024. \url{https://arxiv.org/abs/2410.04060}
+\item He et al. \textit{Boosted Sparse and Low-Rank Tensor Regression}. NeurIPS 2018. \url{https://arxiv.org/abs/1811.01158}
+\item Wang et al. \textit{GLUE: A Multi-Task Benchmark and Analysis Platform for Natural Language Understanding}. \url{https://arxiv.org/abs/1804.07461}
+\item Wang et al. \textit{SuperGLUE: A Stickier Benchmark for General-Purpose Language Understanding Systems}. \url{https://arxiv.org/abs/1905.00537}
+\item Cobbe et al. \textit{Training Verifiers to Solve Math Word Problems}. \url{https://arxiv.org/abs/2110.14168}
+\item Hendrycks et al. \textit{Measuring Massive Multitask Language Understanding}. \url{https://arxiv.org/abs/2009.03300}
+\end{enumerate}
+
+\end{document}

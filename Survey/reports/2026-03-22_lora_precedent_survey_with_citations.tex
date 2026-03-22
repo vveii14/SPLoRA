@@ -1,0 +1,224 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,longtable,hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}
+\title{LoRA Literature Survey for Structured Update Modeling}
+\date{2026-03-22}
+
+\begin{document}
+\maketitle
+
+\section{Scope}
+
+This survey checks whether the three ingredients discussed in the current project framing already have direct precedent in the LoRA and PEFT literature: rank-1 or componentized decomposition, regularization over LoRA-style updates, and tensor decomposition for LoRA-style adaptation.
+
+The goal is not to prove that the project is novel in the broad sense. The goal is narrower: determine which parts are already established, and identify the smallest defensible claim that remains open.
+
+\section{Search Procedure and Skill Coverage}
+
+This pass was executed under the requested skill mix.
+
+\begin{itemize}
+\item \texttt{academic-researcher}: used as the framing for paper-level comparison and research-gap analysis.
+\item \texttt{inno-deep-research}: used as the synthesis structure for multi-source findings with citations.
+\item \texttt{gemini-deep-research}: attempted, but blocked because \texttt{GEMINI\_API\_KEY} is not set in the environment.
+\item \texttt{biorxiv-database}: executed, but returned no LoRA-relevant results; the returned matches were unrelated biology papers, which is expected because the topic is not bioRxiv-native.
+\item \texttt{dataset-discovery}: executed for benchmark discovery, but the local environment lacked \texttt{gh} and Semantic Scholar returned rate limits, so dataset retrieval was incomplete.
+\item \texttt{inno-code-survey}: used to locate and acquire corresponding public codebases for LoTR, LoRTA, LoRETTA, and SPP, which were cloned into \texttt{Experiment/code\_references/}.
+\end{itemize}
+
+\section{Bottom-Line Judgment}
+
+The literature check supports a fairly sharp conclusion:
+
+\begin{itemize}
+\item rank-1 decomposition in LoRA-style adaptation: already explored [1][2]
+\item regularization over LoRA-style adaptation: already explored [3][4]
+\item tensorized LoRA: already explored [5][6][7]
+\end{itemize}
+
+So the project should not be pitched as:
+
+\begin{quote}
+LoRA + rank-1 decomposition + regularization + tensor decomposition
+\end{quote}
+
+because each ingredient already has direct precedent.
+
+The remaining defensible claim is narrower:
+
+\begin{quote}
+make adapter components explicit as structured pathways, regularize them for identifiability at the component level, and treat them as first-class interpretable objects rather than only as a compressed parameterization.
+\end{quote}
+
+That claim is more consistent with the actual novelty boundary exposed by the current survey.
+
+\section{Rank-1 or Componentized LoRA: Already Present}
+
+The basic algebraic observation is trivial but important:
+
+\[
+\Delta W = BA = \sum_{k=1}^{r} b_k a_k^\top.
+\]
+
+Standard LoRA already admits a rank-1 expansion [1]. What later work adds is not the identity itself, but a decision to make component structure explicit and useful. AROMA is a direct precedent here: it builds low-rank adaptation through adaptive rank reduction and makes rank structure part of the method rather than a hidden algebraic fact [2]. This means the project cannot claim novelty simply by rewriting LoRA as a sum of rank-1 terms.
+
+What remains open is the scientific role assigned to those components. Existing rank-aware work shows that rank-1 or progressively reduced components can be useful. It does not yet force the claim that adapter components should be treated as explicit task pathways whose identity and stability are part of the method objective.
+
+\section{LoRA Regularization: Already a Real Sub-literature}
+
+Regularized LoRA is not a gap. SoRA explicitly couples LoRA with sparsity and adaptive effective rank reduction [3]. SPP also sits firmly in this space by preserving sparsity structure during PEFT [4]. These papers are enough to rule out any claim of novelty based only on ``we add regularization to LoRA.''
+
+The more interesting distinction is the type of regularization. Most existing methods impose sparsity, gating, or parameter-level constraints on the LoRA parameterization. The current project is trying to move toward something more structural:
+
+\[
+\Delta W = \sum_{k=1}^{K} \sigma_k \hat{u}_k \hat{v}_k^\top,
+\qquad
+\mathcal{R}_{\mathrm{mult}} = \sum_{k=1}^{K} |\sigma_k| \lVert \hat{u}_k \rVert \lVert \hat{v}_k \rVert.
+\]
+
+That is closer in spirit to the structure-induced regularization used in boosted sparse and low-rank tensor regression [8] than to standard additive penalties over factor blocks. This distinction matters. If the update is modeled as a set of pathways, then the regularizer should ideally operate on pathways as whole outer-product objects, not only on factors independently.
+
+This does not prove that multiplicative pathway regularization is new in LoRA. It only shows that it is not the dominant pattern in the current LoRA regularization literature surveyed here, which leaves room for a cleaner structural claim.
+
+\section{Tensorized LoRA: Also Already Established}
+
+Tensorized PEFT is clearly no longer empty space.
+
+\begin{itemize}
+\item LoRETTA uses tensor-train structure for ultra-low-parameter fine-tuning [5].
+\item LoTR uses low tensor-rank weight adaptation and emphasizes cross-layer tensor structure [6].
+\item LoRTA makes the CP-style tensor adaptation story particularly direct for LLMs [7].
+\end{itemize}
+
+As a result, ``we move from matrix LoRA to tensor LoRA'' is not a publishable novelty statement on its own. At best, tensorization can be justified as the general setting in which a stronger idea is instantiated.
+
+The strongest use of tensorization in the current project is therefore not:
+
+\begin{quote}
+we use tensors because tensors are new
+\end{quote}
+
+but rather:
+
+\begin{quote}
+once adapter components are treated as explicit pathways, tensorization is the natural way to align those pathways with architectural modes such as layer groups, heads, or other multiway structure.
+\end{quote}
+
+That is a much narrower and safer claim.
+
+\section{Where the Actual Opening Seems to Be}
+
+The project still appears viable, but the novelty must sit in the organization of the ingredients, not in the ingredients themselves.
+
+The most promising formulation is:
+
+\begin{enumerate}
+\item start from explicit rank-1 or tensorized components as the primitive update units,
+\item regularize these components for identifiability and concentration rather than only for generic shrinkage,
+\item evaluate them as first-class interpretable objects through ablation, sparsity, concentration, and stability diagnostics.
+\end{enumerate}
+
+This is the point where the project becomes visibly different from a plain ingredient-composition story.
+
+\section{Comparison Table: Literature Status}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.18\textwidth} >{\raggedright\arraybackslash}p{0.26\textwidth} >{\raggedright\arraybackslash}p{0.16\textwidth} >{\raggedright\arraybackslash}p{0.28\textwidth}}
+\toprule
+Component & Representative papers & Status & What this means \\
+\midrule
+\endhead
+Low-rank PEFT baseline & LoRA [1] & Established & Baseline only \\
+Rank-1 / componentized LoRA & AROMA [2] & Already explored & Rank-1 decomposition alone is not novel \\
+Sparse or regularized LoRA & SoRA [3], SPP [4] & Already explored & Generic LoRA regularization is not novel \\
+Tensorized LoRA & LoRETTA [5], LoTR [6], LoRTA [7] & Already explored & Tensorized PEFT is not novel by itself \\
+Structure-induced multiplicative regularization intuition & Boosted Sparse and Low-Rank Tensor Regression [8] & Relevant bridge, not direct LoRA method & Useful conceptual support for pathway-level regularization \\
+\bottomrule
+\end{longtable}
+
+\section{Comparison Table: Defensible Claim Strength}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.35\textwidth} >{\raggedright\arraybackslash}p{0.14\textwidth} >{\raggedright\arraybackslash}p{0.36\textwidth}}
+\toprule
+Claim & Strength & Reason \\
+\midrule
+\endhead
+``We decompose LoRA into rank-1 components.'' & Weak & Already implicit in LoRA and explicit in later work [1][2] \\
+``We regularize LoRA.'' & Weak & Already done in several forms [3][4] \\
+``We tensorize LoRA.'' & Weak & Already done [5][6][7] \\
+``We combine rank-1, regularization, and tensorization.'' & Moderate to weak & Ingredients all exist; composition may look incremental \\
+``We treat adapter components as explicit task pathways, regularize them for identifiability, and evaluate them as first-class interpretable objects.'' & Strongest remaining position & Shifts novelty from ingredients to scientific object and evaluation protocol \\
+\bottomrule
+\end{longtable}
+
+\section{Public Code Repositories Located}
+
+Using the code-survey workflow, the following public repos were acquired and checked locally:
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.12\textwidth} >{\raggedright\arraybackslash}p{0.16\textwidth} >{\raggedright\arraybackslash}p{0.24\textwidth} >{\raggedright\arraybackslash}p{0.33\textwidth}}
+\toprule
+Paper & Repo & Local path & Notes \\
+\midrule
+\endhead
+LoTR [6] & \texttt{daskol/lotr} & \texttt{Experiment/code\_references/lotr} & README explicitly states low tensor-rank weight adaptation and tensor-structured updates \\
+LoRTA [7] & \texttt{ihounie/lorta} & \texttt{Experiment/code\_references/lorta} & Repo includes PEFT integration and task-specific experiment folders \\
+LoRETTA [5] & \texttt{yifanycc/loretta} & \texttt{Experiment/code\_references/loretta} & README explicitly positions the method as tensor-train PEFT \\
+SPP [4] & \texttt{Lucky-Lance/SPP} & \texttt{Experiment/code\_references/spp} & Useful implementation reference for sparsity-preserved PEFT \\
+\bottomrule
+\end{longtable}
+
+Representative implementation entry points found locally:
+
+\begin{itemize}
+\item \texttt{Experiment/code\_references/lotr/lotr/lotr.py}
+\item \texttt{Experiment/code\_references/lotr/lotr/lora.py}
+\item \texttt{Experiment/code\_references/lorta/peft/src/peft/}
+\item \texttt{Experiment/code\_references/loretta/loretta/loretta/utils/tensor\_util.py}
+\item \texttt{Experiment/code\_references/spp/peft/src/peft/tuners/lora.py}
+\end{itemize}
+
+\section{Benchmark Ladder Notes}
+
+\texttt{dataset-discovery} did not return usable results in this environment, so benchmark selection remains a manual step. A reasonable evaluation ladder for this project is still straightforward:
+
+\begin{itemize}
+\item GLUE for small matrix-setting validation [9]
+\item SuperGLUE for stronger NLU stress tests [10]
+\item GSM8K for structured reasoning transfer [11]
+\item MMLU for broad knowledge and instruction-tuned evaluation [12]
+\end{itemize}
+
+These are not proposed as novel datasets. They are proposed as a clean staged benchmark ladder if the project moves toward experiment design.
+
+\section{Final Recommendation for Task 9}
+
+The first implementation direction should be chosen as follows:
+
+\begin{enumerate}
+\item start in the matrix setting,
+\item expose the update as explicit rank-1 pathways,
+\item begin with component sparsity over pathway amplitudes,
+\item test a pathway-level multiplicative regularizer,
+\item postpone tensorization until the matrix-core claims are isolated.
+\end{enumerate}
+
+That is the most defensible route given the current literature boundary.
+
+\section{Sources}
+
+\begin{enumerate}
+\item Hu et al. \textit{LoRA: Low-Rank Adaptation of Large Language Models}. arXiv 2021. \url{https://arxiv.org/abs/2106.09685}
+\item Lu et al. \textit{AROMA: Adaptive Rank Reduction of Low-Rank Adaptation for Large Language Models}. EMNLP 2025. \url{https://aclanthology.org/2025.emnlp-main.170/}
+\item Ding et al. \textit{Sparse Low-rank Adaptation of Pre-trained Language Models}. EMNLP 2023. \url{https://aclanthology.org/2023.emnlp-main.252/}
+\item Lu et al. \textit{SPP: Sparsity-Preserved Parameter-Efficient Fine-Tuning for Large Language Models}. arXiv 2024. \url{https://arxiv.org/abs/2405.16057}
+\item Yang et al. \textit{LoRETTA: Low-Rank Economic Tensor-Train Adaptation for Ultra-Low-Parameter Fine-Tuning of Large Language Models}. NAACL 2024. \url{https://aclanthology.org/2024.naacl-long.174/}
+\item Bershatsky et al. \textit{LoTR: Low Tensor Rank Weight Adaptation}. arXiv 2024. \url{https://arxiv.org/abs/2402.01376}
+\item Hounie et al. \textit{LoRTA: Low Rank Tensor Adaptation of Large Language Models}. arXiv 2024. \url{https://arxiv.org/abs/2410.04060}
+\item He et al. \textit{Boosted Sparse and Low-Rank Tensor Regression}. NeurIPS 2018. \url{https://arxiv.org/abs/1811.01158}
+\item Wang et al. \textit{GLUE: A Multi-Task Benchmark and Analysis Platform for Natural Language Understanding}. ICLR 2019 submission / arXiv 2018. \url{https://arxiv.org/abs/1804.07461}
+\item Wang et al. \textit{SuperGLUE: A Stickier Benchmark for General-Purpose Language Understanding Systems}. NeurIPS 2019. \url{https://arxiv.org/abs/1905.00537}
+\item Cobbe et al. \textit{Training Verifiers to Solve Math Word Problems}. arXiv 2021. \url{https://arxiv.org/abs/2110.14168}
+\item Hendrycks et al. \textit{Measuring Massive Multitask Language Understanding}. ICLR 2021. \url{https://arxiv.org/abs/2009.03300}
+\end{enumerate}
+
+\end{document}
